@@ -11,6 +11,7 @@ import re
 import shutil
 import subprocess
 import sys
+from .storage import check_storage, mount_inventory, validate_checks
 
 APPS = ("sabnzbd", "sonarr", "radarr", "bazarr", "jackett", "plex", "ombi", "tautulli", "netbootxyz")
 PURPOSES = ("media", "downloads", "incomplete", "configs", "backups")
@@ -58,7 +59,7 @@ def preflight():
         "workspace_free_bytes": shutil.disk_usage(Path.cwd()).free,
         "docker": command(["docker", "version", "--format", "{{.Server.Version}}"]),
         "compose": command(["docker", "compose", "version", "--short"]),
-        "mounts": command(["findmnt", "--json", "--output", "TARGET,SOURCE,FSTYPE"]),
+        "mounts": mount_inventory(command),
         "note": "Read-only inventory; not a complete readiness or permission check.",
     }
 
@@ -66,7 +67,7 @@ def preflight():
 def validate(config):
     if not isinstance(config, dict) or config.get("schema_version") != 1:
         raise ValueError("Expected a version 1 configuration object")
-    allowed = {"schema_version", "apps", "timezone", "bind_address", "plex_allowed_networks", "service_user", "storage", "project_directory"}
+    allowed = {"schema_version", "apps", "timezone", "bind_address", "plex_allowed_networks", "service_user", "storage", "project_directory", "storage_checks"}
     if set(config) - allowed:
         raise ValueError("Unknown configuration fields; do not store credentials in this file")
     apps = config.get("apps")
@@ -93,6 +94,7 @@ def validate(config):
             raise ValueError("Directories must be absolute, non-root paths without parent traversal")
     if len(set(storage.values())) != len(storage):
         raise ValueError("Use distinct directories for each storage purpose")
+    validate_checks(config.get("storage_checks", {}), PURPOSES)
     return config
 
 
@@ -186,7 +188,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="action", required=True)
     sub.add_parser("preflight", help="Read-only host inventory")
-    for name in ("configure", "plan"):
+    for name in ("configure", "plan", "check-storage"):
         child = sub.add_parser(name)
         child.add_argument("--config", type=Path, default=Path("installarr.json"))
     args = parser.parse_args(argv)
@@ -195,6 +197,11 @@ def main(argv=None):
             print(json.dumps(preflight(), indent=2))
         elif args.action == "configure":
             configure(args.config)
+        elif args.action == "check-storage":
+            config = validate(json.loads(args.config.read_text()))
+            result = check_storage(config, mount_inventory(command))
+            print(json.dumps(result, indent=2))
+            return 0 if all(row["status"] == "verified" for row in result["checks"]) else 2
         else:
             result = plan(json.loads(args.config.read_text()))
             print(json.dumps(result, indent=2))

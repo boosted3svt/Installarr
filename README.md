@@ -16,6 +16,7 @@ No third-party runtime dependencies are required. From this checkout:
 python3 -m installarr preflight
 python3 -m installarr configure --config /tmp/installarr.json
 python3 -m installarr plan --config /tmp/installarr.json
+python3 -m installarr check-storage --config /tmp/installarr.json
 python3 -m unittest discover -s tests -v
 ```
 
@@ -24,6 +25,42 @@ is mode 0600 and contains no credentials. For unattended planning, supply the sa
 JSON schema directly. `plan` exits 2 for identity conflicts, 1 for invalid input or
 file errors, and 0 for a conflict-free preview; 0 does not imply deployment readiness.
 Preflight reports command availability and exit codes without exposing command stderr.
+
+## Read-only storage validation
+
+Preflight now returns parsed mount records instead of escaped nested JSON. It only
+lists mount metadata; it does not access remote files. `check-storage` explicitly
+reads the configured directories as the invoking operator, without creating files.
+It does not establish service-UID permissions or write access.
+
+Add optional `storage_checks` to your existing JSON configuration. For example,
+if `storage.media` is `/media/Media/TV`:
+
+```json
+"storage_checks": {
+  "media": {
+    "mountpoint": "/media/Media",
+    "source": "192.168.1.103:/share/MD0_DATA/Public",
+    "fstype": "nfs",
+    "sentinel": "healthcheck.txt"
+  }
+}
+```
+
+The sentinel must already exist inside that storage directory. The command never
+creates it. Source, filesystem and covering mountpoint must match exactly before
+file reads occur. Configured storage directories containing symlinks are rejected
+to avoid probing a different filesystem than the asserted mount.
+A missing NAS that leaves an ordinary local directory therefore
+fails before probing it. Each probe has a five-second subprocess timeout; kernel
+uninterruptible filesystem I/O may delay process cleanup beyond that timeout.
+
+Exit 0 means all configured storage purposes passed mount assertions and sentinel
+reads. Exit 2 means at least one failed or lacks sufficient assertions; exit 1 means
+invalid configuration or a command error. Individual results distinguish `verified`,
+`failed`, and `incomplete`. These checks do not establish boot persistence, NAS write
+access, or automatic protection for running containers. Existing configurations
+remain valid, but their storage checks report incomplete until assertions are added.
 
 ## Design requirements
 
