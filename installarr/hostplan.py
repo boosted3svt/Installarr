@@ -65,9 +65,9 @@ def preparation_plan(config):
         directories.append({"purpose": purpose, "path": path, "action": "inspect; create only after storage validation and apply approval"})
         if not mount or mount["kind"] == "local":
             continue
-        if mount["kind"] == "nfs":
+        if mount["fstype"] in ("nfs", "nfs4"):
             packages.add("nfs-common")
-        if mount["kind"] == "smb":
+        if mount["fstype"] == "cifs":
             packages.add("cifs-utils")
         mounts[mount["mountpoint"]] = {**mount, "action": "reuse without editing persistence" if mount["kind"] == "existing" else "inspect existing mount/fstab; propose persistent mount after conflict and access checks"}
     return {

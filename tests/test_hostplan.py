@@ -52,7 +52,7 @@ class HostPlanTests(unittest.TestCase):
         for mount in config["storage_mounts"].values():
             mount["kind"] = "existing"
         result = preparation_plan(config)
-        self.assertEqual(result["required_storage_packages"], [])
+        self.assertEqual(result["required_storage_packages"], ["nfs-common"])
         self.assertEqual(result["mounts"][0]["action"], "reuse without editing persistence")
 
     def test_wizard_collects_nfs_and_generates_checks(self):

@@ -7,6 +7,9 @@ or provision application APIs yet. A successful inventory is not host readiness.
 
 ## Run
 
+For local agent setup and testing on the isolated physical Ubuntu machine, see
+[Physical test host](docs/PHYSICAL_TEST_HOST.md) and [Agent handoff](AGENTS.md).
+
 Python 3.8+ is required; the initial host provisioning target is Ubuntu 24.04 LTS.
 Read-only inventory can also run on older Ubuntu hosts. Timezone validation uses
 the system timezone database (`tzdata`), without a Python `zoneinfo` dependency.
@@ -122,7 +125,7 @@ prohibited. No root access is needed for configuration and planning.
 1. Validate image documentation, choose versions, and expand storage configuration
    to model local/NFS/SMB sources and persistent mount requirements.
 2. Build privileged host adapters with reviewed plans, backups and resume state.
-3. Validate Ubuntu VM account collisions, storage permissions, missing NAS, reboot,
+3. Validate isolated physical Ubuntu account collisions, storage permissions, missing NAS, reboot,
    and Docker restart protection before claiming host provisioning readiness.
 4. Generate Compose, bootstrap authentication, configure integrations, and read back
    settings through version-tested application adapters.
