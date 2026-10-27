@@ -11,10 +11,23 @@ import re
 import shutil
 import subprocess
 import sys
-from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 APPS = ("sabnzbd", "sonarr", "radarr", "bazarr", "jackett", "plex", "ombi", "tautulli", "netbootxyz")
 PURPOSES = ("media", "downloads", "incomplete", "configs", "backups")
+
+
+def validate_timezone(name):
+    """Validate against Ubuntu's system tzdata without requiring Python 3.9."""
+    if not isinstance(name, str) or not name or name.startswith("/") or any(
+        part in ("", ".", "..") for part in name.split("/")
+    ):
+        raise ValueError("Invalid timezone name")
+    try:
+        with (Path("/usr/share/zoneinfo") / name).open("rb") as handle:
+            if handle.read(4) != b"TZif":
+                raise ValueError("Not a timezone data file")
+    except OSError:
+        raise ValueError("Unknown timezone or missing system tzdata") from None
 
 
 def command(args):
@@ -62,8 +75,8 @@ def validate(config):
     try:
         ipaddress.IPv4Address(config["bind_address"])
         ipaddress.IPv4Network(config["plex_allowed_networks"], strict=False)
-        ZoneInfo(config["timezone"])
-    except (KeyError, ValueError, ZoneInfoNotFoundError, TypeError):
+        validate_timezone(config["timezone"])
+    except (KeyError, ValueError, TypeError):
         raise ValueError("Valid IPv4 binding, Plex CIDR and timezone are required") from None
     identity = config.get("service_user", {})
     if not isinstance(identity, dict) or set(identity) != {"name", "uid", "gid"} or not re.fullmatch(r"[a-z_][a-z0-9_-]{0,31}", str(identity.get("name", ""))):

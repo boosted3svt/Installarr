@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from installarr.cli import main, plan, save_config, validate
+from installarr.cli import main, plan, save_config, validate, validate_timezone
 
 
 def configuration():
@@ -20,6 +20,12 @@ def configuration():
 
 
 class ConfigurationTests(unittest.TestCase):
+    def test_timezone_database_validation(self):
+        validate_timezone("America/Chicago")
+        for name in ("../etc/passwd", "/etc/passwd", "", "Not/AZone", "zone.tab", None):
+            with self.subTest(name=name), self.assertRaises(ValueError):
+                validate_timezone(name)
+
     def test_reject_root_identity_and_invalid_storage(self):
         for field, value in (("uid", 0), ("gid", 0), ("uid", True)):
             config = configuration()

@@ -7,7 +7,9 @@ or provision application APIs yet. A successful inventory is not host readiness.
 
 ## Run
 
-Python 3.10+ is required; the initial host provisioning target is Ubuntu 24.04 LTS.
+Python 3.8+ is required; the initial host provisioning target is Ubuntu 24.04 LTS.
+Read-only inventory can also run on older Ubuntu hosts. Timezone validation uses
+the system timezone database (`tzdata`), without a Python `zoneinfo` dependency.
 No third-party runtime dependencies are required. From this checkout:
 
 ```sh
