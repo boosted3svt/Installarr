@@ -62,6 +62,40 @@ invalid configuration or a command error. Individual results distinguish `verifi
 access, or automatic protection for running containers. Existing configurations
 remain valid, but their storage checks report incomplete until assertions are added.
 
+## Storage wizard and host preparation plan
+
+`configure` now asks for local, existing-mount, NFS or SMB storage independently
+for each purpose. NFS/SMB inputs capture the exact source, mountpoint, filesystem
+and optional existing sentinel; SMB captures only a credentials **file path**, never
+a username/password. Do not put credentials in source URLs or paths.
+
+These choices populate `storage_mounts` and automatically supply assertions to
+`check-storage`. Multiple directories may share one identical mount. Conflicting
+sources at a mountpoint, directories outside their declared mounts, conflicting
+check assertions and nested mount layouts are rejected. Existing mounts are marked
+for reuse without changing their persistence configuration. Local storage means an
+existing filesystem directory, not disk formatting or partitioning.
+
+`plan` now includes deduplicated mount proposals, required NFS/CIFS packages,
+directory intentions, and outstanding validation gates. It does not execute them.
+An example mount choice (alongside `storage.media: /media/Media/Movies`):
+
+```json
+"storage_mounts": {
+  "media": {
+    "kind": "nfs",
+    "mountpoint": "/media/Media",
+    "source": "192.168.1.103:/share/MD0_DATA/Public",
+    "fstype": "nfs"
+  }
+}
+```
+
+Old JSON files remain accepted and report missing storage choices in the host
+preparation blockers. Plans are declarative, not runnable scripts; `apply` is not
+implemented. New wizard runs should use a new filename because overwrites remain
+prohibited. No root access is needed for configuration and planning.
+
 ## Design requirements
 
 - Fresh provisioning first; application-state migration/disaster recovery is a stretch goal.

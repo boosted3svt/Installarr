@@ -12,6 +12,7 @@ import shutil
 import subprocess
 import sys
 from .storage import check_storage, mount_inventory, validate_checks
+from .hostplan import collect_storage, preparation_plan, storage_assertions, validate_mounts
 
 APPS = ("sabnzbd", "sonarr", "radarr", "bazarr", "jackett", "plex", "ombi", "tautulli", "netbootxyz")
 PURPOSES = ("media", "downloads", "incomplete", "configs", "backups")
@@ -67,7 +68,7 @@ def preflight():
 def validate(config):
     if not isinstance(config, dict) or config.get("schema_version") != 1:
         raise ValueError("Expected a version 1 configuration object")
-    allowed = {"schema_version", "apps", "timezone", "bind_address", "plex_allowed_networks", "service_user", "storage", "project_directory", "storage_checks"}
+    allowed = {"schema_version", "apps", "timezone", "bind_address", "plex_allowed_networks", "service_user", "storage", "project_directory", "storage_checks", "storage_mounts"}
     if set(config) - allowed:
         raise ValueError("Unknown configuration fields; do not store credentials in this file")
     apps = config.get("apps")
@@ -95,6 +96,8 @@ def validate(config):
     if len(set(storage.values())) != len(storage):
         raise ValueError("Use distinct directories for each storage purpose")
     validate_checks(config.get("storage_checks", {}), PURPOSES)
+    validate_mounts(config)
+    validate_checks(storage_assertions(config), PURPOSES)
     return config
 
 
@@ -134,6 +137,7 @@ def plan(config):
         "apps": config["apps"], "service_user": user,
         "netbootxyz_identity": {"name": "nbxyz", "uid": 911, "gid": 1001} if "netbootxyz" in config["apps"] else None,
         "host_storage": config["storage"],
+        "host_preparation": preparation_plan(config),
         "proposed_container_paths": {"media": "/data/media", "downloads": "/data/downloads", "incomplete": "/data/incomplete"},
         "plex_allowed_networks": config["plex_allowed_networks"],
         "conflicts": conflicts,
@@ -175,8 +179,8 @@ def configure(path):
             "uid": int(ask("Media UID (availability checked by plan)", "1000")),
             "gid": int(ask("Media GID (availability checked by plan)", "1000")),
         },
-        "storage": {purpose: ask(f"Host directory for {purpose}", f"/srv/media-stack/{purpose}") for purpose in PURPOSES},
     }
+    config["storage"], config["storage_mounts"] = collect_storage(ask, PURPOSES)
     preview = plan(config)
     print(json.dumps(preview, indent=2))
     if ask("Save these choices? yes/no", "no").lower() == "yes":
@@ -199,7 +203,8 @@ def main(argv=None):
             configure(args.config)
         elif args.action == "check-storage":
             config = validate(json.loads(args.config.read_text()))
-            result = check_storage(config, mount_inventory(command))
+            checked_config = dict(config, storage_checks=storage_assertions(config))
+            result = check_storage(checked_config, mount_inventory(command))
             print(json.dumps(result, indent=2))
             return 0 if all(row["status"] == "verified" for row in result["checks"]) else 2
         else:
