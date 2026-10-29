@@ -57,6 +57,9 @@ class ConfigurationTests(unittest.TestCase):
         config = configuration()
         config["service_user"]["gid"] = 1001
         self.assertTrue(plan(config)["conflicts"])
+        config = configuration()
+        config["service_user"]["name"] = "nbxyz"
+        self.assertTrue(plan(config)["conflicts"])
 
     def test_save_private_and_never_overwrite(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -14,3 +14,6 @@ installarr = "installarr.cli:main"
 
 [tool.setuptools.packages.find]
 include = ["installarr*"]
+
+[tool.setuptools.package-data]
+installarr = ["data/trash/manifest.json", "data/trash/UPSTREAM_LICENSE", "data/trash/*/*/*.json"]

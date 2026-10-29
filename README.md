@@ -1,134 +1,119 @@
 # Installarr
 
-Headless CLI for fresh Ubuntu media-stack provisioning. This initial release
-implements read-only discovery, interactive nonsecret configuration, and planning.
-It does **not** install packages, create accounts, mount storage, deploy containers,
-or provision application APIs yet. A successful inventory is not host readiness.
+A guided installer for a fresh Ubuntu media server. Start with Ubuntu, OpenSSH
+and an account that can use `sudo`; Installarr guides you through the rest.
 
-## Run
+**Status:** the combined nine-app deployment and API configuration tests pass.
+A full clean-Ubuntu/systemd installation and reboot acceptance test are still pending.
 
-For local agent setup and testing on the isolated physical Ubuntu machine, see
-[Physical test host](docs/PHYSICAL_TEST_HOST.md) and [Agent handoff](AGENTS.md).
+## Start here
 
-Python 3.8+ is required; the initial host provisioning target is Ubuntu 24.04 LTS.
-Read-only inventory can also run on older Ubuntu hosts. Timezone validation uses
-the system timezone database (`tzdata`), without a Python `zoneinfo` dependency.
-No third-party runtime dependencies are required. From this checkout:
+Connect to your Ubuntu server with SSH and paste these lines:
 
 ```sh
-python3 -m installarr preflight
-python3 -m installarr configure --config /tmp/installarr.json
-python3 -m installarr plan --config /tmp/installarr.json
-python3 -m installarr check-storage --config /tmp/installarr.json
-python3 -m unittest discover -s tests -v
+sudo apt-get update
+sudo apt-get install -y git ca-certificates
+git clone https://github.com/boosted3svt/Installarr.git
+cd Installarr
+./installarr.sh
 ```
 
-`configure` requires a terminal and refuses to overwrite existing files. Saved JSON
-is mode 0600 and contains no credentials. For unattended planning, supply the same
-JSON schema directly. `plan` exits 2 for identity conflicts, 1 for invalid input or
-file errors, and 0 for a conflict-free preview; 0 does not imply deployment readiness.
-Preflight reports command availability and exit codes without exposing command stderr.
+The launcher installs its small Ubuntu prerequisites if needed, then opens the
+setup guide. After package installation, the command `installarr` opens the same
+guide. Neither entry point needs flags or variables.
 
-## Read-only storage validation
+The guide walks through:
 
-Preflight now returns parsed mount records instead of escaped nested JSON. It only
-lists mount metadata; it does not access remote files. `check-storage` explicitly
-reads the configured directories as the invoking operator, without creating files.
-It does not establish service-UID permissions or write access.
+1. Choosing programs, with a short explanation of each.
+2. Connecting your NAS and choosing media folders.
+3. Reviewing your choices and confirming installation.
+4. Choosing one shared administrator login and entering provider account details.
+5. Preparing Ubuntu, storage and Docker.
+6. Authorizing Plex through its website on your phone or another computer.
+7. Starting the containers and configuring their API connections, profiles and family settings.
+8. Offering automatic startup when the computer turns on.
 
-Add optional `storage_checks` to your existing JSON configuration. For example,
-if `storage.media` is `/media/Media/TV`:
+Press Enter to accept a suggested answer. Installation starts only after you
+confirm it. Choices and private account details are saved on that installed
+computer so the same guide can continue an interrupted setup.
 
-```json
-"storage_checks": {
-  "media": {
-    "mountpoint": "/media/Media",
-    "source": "192.168.1.103:/share/MD0_DATA/Public",
-    "fstype": "nfs",
-    "sentinel": "healthcheck.txt"
-  }
-}
-```
+## Account details
 
-The sentinel must already exist inside that storage directory. The command never
-creates it. Source, filesystem and covering mountpoint must match exactly before
-file reads occur. Configured storage directories containing symlinks are rejected
-to avoid probing a different filesystem than the asserted mount.
-A missing NAS that leaves an ordinary local directory therefore
-fails before probing it. Each probe has a five-second subprocess timeout; kernel
-uninterruptible filesystem I/O may delay process cleanup beyond that timeout.
+Each **clean installation prompts for the credentials it needs**. There is no
+saved file to keep or copy from an old server.
 
-Exit 0 means all configured storage purposes passed mount assertions and sentinel
-reads. Exit 2 means at least one failed or lacks sufficient assertions; exit 1 means
-invalid configuration or a command error. Individual results distinguish `verified`,
-`failed`, and `incomplete`. These checks do not establish boot persistence, NAS write
-access, or automatic protection for running containers. Existing configurations
-remain valid, but their storage checks report incomplete until assertions are added.
+Have your administrator-login choice, Newshosting username/password, NZBGeek API
+key and OpenSubtitles.com username/password available if you select those services.
+Plex uses its own browser authorization. Optional family Discord account numbers
+are entered privately when prompted; press Enter to leave one blank.
 
-## Storage wizard and host preparation plan
+Passwords, API keys and Discord IDs are kept privately on the installed computer,
+separately from ordinary settings and Git. A new, clean computer asks for them again.
+The original reference Compose file is not needed: Installarr generates Compose
+and connects the programs through their APIs.
 
-`configure` now asks for local, existing-mount, NFS or SMB storage independently
-for each purpose. NFS/SMB inputs capture the exact source, mountpoint, filesystem
-and optional existing sentinel; SMB captures only a credentials **file path**, never
-a username/password. Do not put credentials in source URLs or paths.
+## Programs and reference defaults
 
-These choices populate `storage_mounts` and automatically supply assertions to
-`check-storage`. Multiple directories may share one identical mount. Conflicting
-sources at a mountpoint, directories outside their declared mounts, conflicting
-check assertions and nested mount layouts are rejected. Existing mounts are marked
-for reuse without changing their persistence configuration. Local storage means an
-existing filesystem directory, not disk formatting or partitioning.
+All nine programs are offered by default; each can be skipped:
 
-`plan` now includes deduplicated mount proposals, required NFS/CIFS packages,
-directory intentions, and outstanding validation gates. It does not execute them.
-An example mount choice (alongside `storage.media: /media/Media/Movies`):
+- Plex — watch movies and TV shows.
+- Sonarr and Radarr — manage TV and movies.
+- SABnzbd — download using a Usenet subscription.
+- Bazarr — subtitles through OpenSubtitles.com, with standard English defaults.
+- Ombi — family requests and preferences.
+- Tautulli — Plex activity.
+- Jackett — additional indexers; no torrent downloader is installed.
+- netboot.xyz — network-boot files and interface. DHCP/PXE network setup is separate.
 
-```json
-"storage_mounts": {
-  "media": {
-    "kind": "nfs",
-    "mountpoint": "/media/Media",
-    "source": "192.168.1.103:/share/MD0_DATA/Public",
-    "fstype": "nfs"
-  }
-}
-```
+The editable NFS defaults reproduce the supplied reference:
 
-Old JSON files remain accepted and report missing storage choices in the host
-preparation blockers. Plans are declarative, not runnable scripts; `apply` is not
-implemented. New wizard runs should use a new filename because overwrites remain
-prohibited. No root access is needed for configuration and planning.
+| NAS source | Connected folder |
+| --- | --- |
+| `192.168.1.103:/share/MD0_DATA/Public` | `/media/Media` |
+| `192.168.1.102:/share/MD0_DATA/Public` | `/media/NAS` |
 
-## Design requirements
+Additional movies use `/media/NAS/Movies`. Network-boot assets default to
+`/media/netbootxyz/assets`. Application databases stay on the local computer.
 
-- Fresh provisioning first; application-state migration/disaster recovery is a stretch goal.
-- CLI only; browser authorization, if necessary, takes place on another device.
-- Every app is optional: SABnzbd, Sonarr, Radarr, Bazarr, Jackett, Plex, Ombi,
-  Tautulli and netbootxyz.
-- Prefer documented image-specific non-root ownership. Never inherit production 0:0.
-- Selected netbootxyz requires host user/group `nbxyz`, UID 911 and GID 1001.
-  Its runtime permission mechanism must be verified against official image guidance.
-  DHCP and client PXE reachability are operator-managed.
-- Preserve the editable Plex allowed-network preset `192.168.0.0/23`.
-- Generate Compose and application paths from one storage map. Existing host media
-  is never renamed or recursively chowned by default.
-- Validate mount identity, reachable sentinel files, application APIs, and service-UID
-  access separately. Implement mount-loss protection beyond Docker health status.
-- GUI administrator credentials are distinct from Linux users and generated API keys.
-  Family Ombi users use Plex authorization, with optional reconciled family presets.
-- Pin tested application images and TRaSH profile snapshots; dynamically resolve IDs.
-- No production writes during development. Use isolated test paths and minimal
-  disposable service pairs, never production download destinations.
+Movies prefer the full pinned TRaSH **Remux + WEB 1080p** profile, with a separate
+**2160p** profile available for manual upgrades. TV uses **WEB-1080p**.
 
-## Next implementation gates
+Plex groups multiple folders into one Movies library and one TV library, alongside
+sports, StandUp and Music. The removed and low-resolution collections are excluded.
+The reference family option prestages genuine Plex users:
 
-1. Validate image documentation, choose versions, and expand storage configuration
-   to model local/NFS/SMB sources and persistent mount requirements.
-2. Build privileged host adapters with reviewed plans, backups and resume state.
-3. Validate isolated physical Ubuntu account collisions, storage permissions, missing NAS, reboot,
-   and Docker restart protection before claiming host provisioning readiness.
-4. Generate Compose, bootstrap authentication, configure integrations, and read back
-   settings through version-tested application adapters.
-5. Exercise reruns, interrupted runs, restart persistence and approved functional tests.
+- `lenora8`: Lenora movie/TV folders and 1080p profiles.
+- `rebel739`: Jeremy movie/TV folders and 1080p profiles.
+- `beanie08`: global folders/profiles and PowerUser.
 
-Use the existing isolated checkout for development; do not create a worktree unless requested.
+All three receive automatic movie/TV approval. Supplied Discord IDs go into their
+Ombi notification preferences; notification sending remains disabled. Family Plex
+passwords are never requested.
+
+## Storage and verification
+
+Installarr checks mount identity and application-account access before writes,
+uses local application databases, and preserves existing media and path case.
+Plex media access is read-only; Radarr/Bazarr share the writable additional movie
+folder. Unavailable storage prevents dependent containers from starting normally.
+
+The dated or `Installarr-*` folders from development experiments are not created
+by normal installation. The developer scripts under `tools/` are separate tests.
+
+Current evidence includes a real nine-app deployment, authenticated HTTP checks,
+API integrations, complete pinned profiles and family-preference readback. The
+217-test suite also passes from installed wheels in Ubuntu20.04 and24.04 userspaces.
+Those userspace tests do not replace the pending full clean-host/boot test.
+Ubuntu20.04 compatibility uses a pinned archived amd64 Docker package set; details
+and remaining acceptance limits are in the developer documentation.
+
+## Development
+
+- [Current checkpoint](docs/CURRENT_PROGRESS.md)
+- [Installation details](docs/INSTALLER_RUNBOOK.md)
+- [Test evidence](docs/TEST_RESULTS.md)
+- [Remaining acceptance](docs/INTERACTIVE_TEST_QUEUE.md)
+- [Advanced/historical commands](docs/DEVELOPER_COMMAND_REFERENCE.md)
+
+Run the suite with `python3 -m unittest discover -s tests -v`.
+The bundled TRaSH snapshot includes its upstream license and checksum manifest.

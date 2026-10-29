@@ -1,0 +1,2 @@
+# Preserve checksum-pinned upstream profile bytes verbatim.
+installarr/data/trash/** -whitespace

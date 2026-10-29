@@ -3,6 +3,7 @@ import json
 import subprocess
 import sys
 from pathlib import PurePosixPath
+from .storage_process import StorageProcessError
 
 
 def mount_inventory(run):
@@ -75,11 +76,12 @@ print(json.dumps(result))
         args = [sys.executable, "-c", script, path]
         if sentinel is not None:
             args.append(sentinel)
-        result = subprocess.run(args, capture_output=True, text=True, timeout=5, check=False)
+        from .storage_process import run_storage
+        result = run_storage(args, timeout=5, operation='read-probe')
         if result.returncode != 0:
             return {"status": "probe_failed"}
         return json.loads(result.stdout)
-    except subprocess.TimeoutExpired:
+    except StorageProcessError:
         return {"status": "timeout"}
     except (OSError, ValueError):
         return {"status": "probe_failed"}

@@ -17,8 +17,10 @@ findmnt /media/installarr
 ```
 
 The mount command assumes the operator has already added the test entry to fstab.
-Never append duplicate entries. The current installer only lists required packages;
-automatic installation is not implemented yet. Even reused NFS mounts require
+Never append duplicate entries. The installer now provides `prepare-prerequisites --config /path/to/config.json`
+for signed, resumable installation of the required client packages. `check-mounts` and `prepare-mounts` now reconcile exact mounts/fstab, preserve
+existing entries and back up approved persistence edits. Fresh NFS mount tests
+passed in a private mount namespace; live host fstab stayed unchanged. Even reused NFS mounts require
 nfs-common in the host plan. SMB uses cifs-utils instead.
 
 ## Bootstrap local Codex CLI
@@ -78,3 +80,51 @@ the checkout. Codex is not installed as a boot daemon by these instructions.
 Official sources: https://github.com/openai/codex and
 https://developers.openai.com/codex/cli/ . Commands were checked against the official
 repository on 2026-10-27; use `codex --help` and `codex login --help` for installed-version details.
+
+## Current physical checkpoint (2026-10-29)
+
+The operator approved standard Docker web-bridge/NAT changes. Standard Docker and
+containerd are active and boot-disabled; the historical isolated daemon is stopped.
+Do not run the earlier masking/staging workflow against the active engine. Host
+IP/DNS/manual routes, SSH, VLANs, disks and unrelated firewall rules stay protected.
+No reboot has been approved.
+
+Exact test mount:192.168.1.102:/share/MD0_DATA/Public/installarr at/media/installarr,
+NFS. Verify it with findmnt before every experiment that writes. Only this test
+export is authorized; preserve the supplied movie, subtitle and episode files.
+
+Leave these active, disabled-at-boot service pairs available:
+
+- installarr-poc-http-d29db77d.service: Radarr7878/SAB8090.
+- installarr-plex-standard-test.service: Plex32400/Tautulli8181.
+- installarr-ombi-family-2274744e.service: Ombi3579, own native Plex sign-in confirmed.
+
+Operator confirmed real Plex GUI movie/episode playback. Plex is already claimed,
+uses a read-only NAS bind, and is named Installarr Test. Current config/state:
+/var/tmp/installarr-plex-standard-2bbujwqu/config.json and state. Older Plex test
+units share its original local databases and must remain stopped.
+
+Final Plex libraries: Movies (four folders), TV (three), sports→sports,
+StandUp→StandUp and Music→Music. No low-res folders, Disney, Only Heather,
+YouTube Videos or TubeSync Videos libraries. Movies-2 is an empty test placeholder;
+the production secondary mount is not validated. No media directories were deleted.
+
+Ombi native family/Arr/Plex links, availability/routing and import crash recovery
+passed; full fresh combined family apply still needs a claim/coordinated scope.
+netboot explicit local/NFS assets,911:1001 permissions and marker recovery passed.
+Generic read-only secondary Movies-2 source protection passed; production source
+values/claimed GUI remain outstanding. Scheduled subtitles, controlled generated
+Radarr/Sonarr download/import, optional standalone pairs and terminal menu passed.
+Immutable runtime updates are explicit/stopped-only with backups/journal recovery;
+retained three units stay on their original snapshots. No clean-host/systemd,
+real NAS outage or reboot readiness is claimed.
+
+Operator asked for continuous progress while away for roughly five hours. Queue
+interactive state/recipes in INTERACTIVE_TEST_QUEUE.md and continue independent
+work. Do not ask/wait at those gates during the absence. This supersedes the prior
+saved pause. Read AUTONOMOUS_WORK_PLAN.md for the full classification.
+
+Read CURRENT_PROGRESS.md for precise current commands, private-file boundaries,
+latest test totals and next work; IMPLEMENTATION_CHECKLIST.md tracks remaining
+requirements and TEST_RESULTS.md records exact pins, failures and physical evidence.
+Continue independent work; do not stop solely because a milestone passed.
