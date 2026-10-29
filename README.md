@@ -109,6 +109,10 @@ and remaining acceptance limits are in the developer documentation.
 
 ## Development
 
+For optional Codex assistance after wiping the test machine, use the
+[post-wipe Codex handoff](docs/FRESH_HOST_CODEX_HANDOFF.md). Codex runs directly in
+the SSH terminal; no tmux is part of the operator's workflow.
+
 - [Current checkpoint](docs/CURRENT_PROGRESS.md)
 - [Installation details](docs/INSTALLER_RUNBOOK.md)
 - [Test evidence](docs/TEST_RESULTS.md)

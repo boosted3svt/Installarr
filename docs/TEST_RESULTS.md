@@ -2624,3 +2624,27 @@ private paths, replica boundaries and rollback are in CURRENT_PROGRESS.md. Follo
 publication metadata updates only documentation; installed code/tests remain the
 same validated217-test version. Each clean install prompts for credentials/optional
 Discord IDs. Future agents must not invent a file-import requirement.
+
+
+## Latest operator correction: direct Codex after a wipe
+
+The operator requests NO tmux involvement. Run Codex directly in the SSH terminal;
+do not install tmux, create sessions, wrap commands or add a multiplexer dependency.
+Authoritative commands and seed prompt: docs/FRESH_HOST_CODEX_HANDOFF.md. That guide
+also records the explicitly requested dangerous Codex flag and validated optional
+NOPASSWD sudo rule for the Ubuntu operator; these are test-operator opt-ins, not
+requirements of Installarr or permission to touch production. Documentation only:
+no new sudo policy has been installed on the current machine.
+
+After wiping, old local Codex history/authentication, /var/tmp and /var/lib fixture
+paths, containers, mounts and application DBs must be treated as gone. Start a new
+Codex chat that reads the published checkpoints. Resume --last is only for a saved
+session on the surviving new installation, not restoration of erased history.
+Credentials and optional Discord IDs are collected through normal prompts again;
+no file transfer/export/restore bundle. Do not preinstall Docker/NFS manually before
+exercising the installer. Use only the approved isolated NAS export for testing;
+production NFS defaults are not authorization to access production. Ask before reboot.
+
+Current known acceptance: nine-app combined configuration, cold Plex initialization,
+217-test host/installed-wheel/public-clone checks. Remaining: actual clean-host/systemd
+and boot acceptance. Source/API logic unchanged by this documentation correction.

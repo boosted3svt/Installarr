@@ -4,7 +4,11 @@ This is a dedicated physical Ubuntu server, not a VM. It has OpenSSH and an isol
 VLAN allowing NAS and Internet access. The operator supplies isolated NAS storage.
 No production test run is needed. Read AGENTS.md for implementation requirements.
 
-## NFS prerequisite
+## Historical manual NFS prerequisite test
+
+This section records earlier manual storage experiments. Do not run these commands
+before the fresh-install acceptance test: let Installarr install NFS helpers and
+prepare mounts itself. Use FRESH_HOST_CODEX_HANDOFF.md for the current test flow.
 
 On fresh Ubuntu, install the NFS client helper before mounting NFS:
 
@@ -23,63 +27,18 @@ existing entries and back up approved persistence edits. Fresh NFS mount tests
 passed in a private mount namespace; live host fstab stayed unchanged. Even reused NFS mounts require
 nfs-common in the host plan. SMB uses cifs-utils instead.
 
-## Bootstrap local Codex CLI
+## Codex on a fresh or wiped host
 
-Install prerequisites as the normal administrator:
+Follow [FRESH_HOST_CODEX_HANDOFF.md](FRESH_HOST_CODEX_HANDOFF.md) for the current
+installation, device login, operator-requested passwordless sudo and direct Codex
+launch commands. **No tmux involvement:** do not install it or wrap Codex with it.
+Run Codex directly in the SSH terminal. The guide includes the exact initial
+checkpoint prompt and later resume command.
 
-```sh
-sudo apt update
-sudo apt install -y ca-certificates curl git python3 tmux
-curl -fsSL https://chatgpt.com/codex/install.sh -o /tmp/codex-install.sh
-less /tmp/codex-install.sh
-sh /tmp/codex-install.sh
-```
-
-Follow the installer's PATH instructions, reconnect SSH if needed, then:
-
-```sh
-codex --version
-codex login --device-auth
-```
-
-Open the displayed authorization URL on another device and authenticate. Never
-paste the login code, credential files or tokens into Git/chat. Device authorization
-may need to be enabled in your account settings; follow the CLI's instructions.
-
-Clone the repository, or pull main in the existing checkout. Private GitHub repository
-authentication is separate from Codex login; use your normal GitHub access method.
-
-```sh
-git clone https://github.com/boosted3svt/Installarr.git
-cd Installarr
-tmux new -s installarr
-codex
-```
-
-Start with normal permissions and give the agent this task:
-
-> Read AGENTS.md and docs/PHYSICAL_TEST_HOST.md. Continue implementing the usable
-> installer on this dedicated test machine. First inspect the host and confirm the
-> isolated test mount. Run commands yourself, implement and test host preparation,
-> then Docker and application adapters. Record results and blockers. Do not touch
-> production or storage outside the test subtree. Do not format disks or change SSH,
-> firewall, DHCP or networking. Ask before rebooting. Use sudo only within that scope.
-
-Codex is a separate local session; it does not inherit the cloud chat. It can run
-commands directly. Permission approvals and sudo may still require operator input.
-For unattended host-level testing, after confirming the machine and storage scope,
-an explicit opt-in is `codex --dangerously-bypass-approvals-and-sandbox`. This disables
-Codex's sandbox and approval prompts; it does not grant Linux root privileges or
-bypass sudo passwords. Do not use it on production. Choose a suitable administrative
-access policy separately rather than casually granting passwordless sudo.
-
-tmux keeps the terminal session alive if SSH disconnects, but not across reboot.
-Reconnect using `tmux attach -t installarr`; after reboot use `codex resume` from
-the checkout. Codex is not installed as a boot daemon by these instructions.
-
-Official sources: https://github.com/openai/codex and
-https://developers.openai.com/codex/cli/ . Commands were checked against the official
-repository on 2026-10-27; use `codex --help` and `codex login --help` for installed-version details.
+A wiped installation has no surviving local chat history or old test services.
+Start a new chat from GitHub checkpoints rather than trying to resume an erased
+thread. Let Installarr perform Docker/NFS provisioning for the clean-install test.
+The normal installer itself needs no Codex installation or permission bypass.
 
 ## Current physical checkpoint (2026-10-29)
 

@@ -1,5 +1,11 @@
 # Saved checkpoint — published guided installer
 
+**After a wipe:** this document's old local service/database paths are historical,
+not resources to restore. Read [FRESH_HOST_CODEX_HANDOFF.md](FRESH_HOST_CODEX_HANDOFF.md)
+for a new direct Codex session, credential prompts and isolated test settings.
+The operator explicitly requires no tmux involvement. Continue fresh-install/boot
+acceptance from the published notes; do not assume the old host state survived.
+
 Authoritative resume: [CURRENT_PROGRESS.md](CURRENT_PROGRESS.md).
 
 The operator-owned [boosted3svt/Installarr](https://github.com/boosted3svt/Installarr)
