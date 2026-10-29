@@ -46,10 +46,11 @@ identity concurrently. No IDs, passwords, keys or claims belong in this document
    the current test host. Its units remain disabled. Test absent-mount protection
    and recovery through boot without changing production NAS availability.
 
-Publishing to boosted3svt/Installarr is explicitly authorized and the connector
-already has admin/push access; no new GitHub login/token is needed. Finish source/
-private-value review, publish, then verify a new clone. This is ongoing agent work,
-not another question to ask the user for permission.
+The tested implementation is published on boosted3svt/Installarr main at
+bc9017a4eec41b8bd514901b0067accbdfffdd2c. The existing GitHub connection already
+had permission; no new login/token was needed. A fresh public clone passed the
+launcher and217-test suite. No files or credentials need to be transferred for the
+normal fresh-install flow: enter the requested account details at its prompts.
 
 ## Explicitly outside the required flow
 

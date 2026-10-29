@@ -18,8 +18,8 @@ cd Installarr
 The script installs missing python3/ca-certificates/tzdata, then opens plain guided
 setup with no flags. Installed console command `installarr` also defaults to the
 guide. Normal prompts hide internal state paths, UID/GID and Compose details.
-Explicit subcommands remain advanced tools. Publication to the operator-owned boosted3svt/Installarr repository is authorized
-and in progress. Each clean installation prompts for credentials and optional
+Explicit subcommands remain advanced tools. Published to the operator-owned boosted3svt/Installarr repository on main.
+First implementation commit: bc9017a4eec41b8bd514901b0067accbdfffdd2c. Each clean installation prompts for credentials and optional
 Discord IDs; no saved credential file or manual transfer is part of the flow.
 
 Scope is fresh provisioning, shared logins, app API connections, full pinned TRaSH
@@ -132,7 +132,9 @@ OMBI_FAMILY_PREFERENCES.md. Do not ask for these IDs again or put values in Git.
 The guide now offers automatic startup after successful installation and verifies
 only the owned deployment/Docker/containerd units. Unit tests cover readiness and
 ownership gates. Physical test units remain disabled; no reboot approved/performed.
-No commit, push or publication. Remaining fresh-install acceptance is a genuinely
-clean Ubuntu/systemd target and its boot behavior; then publish reviewed code so
-the clone command retrieves this implementation. Do not substitute more ordinary
+Publication completed through the existing authorized GitHub connector. A new
+public clone of commit bc9017a4eec41b8bd514901b0067accbdfffdd2c passed the launcher and217-test
+suite. Evidence: /var/tmp/installarr-public-clone-dd6cdxrk/result.json. Remaining
+fresh-install acceptance is a genuinely clean Ubuntu/systemd target and its boot
+behavior. Do not substitute more ordinary
 application GUI actions for those remaining installer-level checks.

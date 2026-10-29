@@ -533,3 +533,33 @@ private files remain for operation/resume on that same installed computer. Refer
 Compose is translated into code and is not a runtime prerequisite. No encryption
 bundle code/dependency was added. Remaining real acceptance is clean Ubuntu/systemd
 and boot behavior, not more ordinary app user-action tests. No reboot performed.
+
+
+## Publication completed
+
+Operator explicitly authorized publishing to their Installarr repository. Existing
+GitHub connector authenticated as boosted3svt with admin/push permission; no new
+login, token collection or machine Git credential setup was needed. Main advanced
+by lease-checked fast-forward from6158c38c07655aea6bc8a817acea81c2c3865268 to
+bc9017a4eec41b8bd514901b0067accbdfffdd2c. GitHub tree SHA exactly matched the reviewed
+local staged tree91bbd85a61200ee24095d2c0f4a6cb2d13ecb074.809changed entries uploaded,
+including full pinned625document catalog/license, source/tests/docs and executable
+single-script launcher. Actual current private values were checked against the
+staged payload: no GUI/provider secrets, Plex token or Discord IDs present. Supplied
+reference_compose.yaml remains ignored/unpublished. Vendored whitespace is preserved
+verbatim for its pinned checksums; ordinary code whitespace check passes.
+
+A new unauthenticated public clone into /var/tmp/installarr-public-clone-dd6cdxrk
+confirmed exact commit, executable launcher/help, no-argument nonterminal safe exit,
+imports from the new clone and217tests passed (212passed/5appropriate skips).
+Result: /var/tmp/installarr-public-clone-dd6cdxrk/result.json, tests.log. This is
+fresh-clone validation, not a claim of full clean-Ubuntu/systemd or reboot acceptance.
+Those remain the two actual operator acceptance tasks. No extra application-user
+functionality tests, credential transfers or encrypted bundles are required.
+
+Current all9-container freshcheck-aaabe264-v2 deployment remains active/boot-disabled;
+previous3services and bootstrap are stopped. No reboot performed. Current source,
+private paths, replica boundaries and rollback are in CURRENT_PROGRESS.md. Follow-up
+publication metadata updates only documentation; installed code/tests remain the
+same validated217-test version. Each clean install prompts for credentials/optional
+Discord IDs. Future agents must not invent a file-import requirement.
