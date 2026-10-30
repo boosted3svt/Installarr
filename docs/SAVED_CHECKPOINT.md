@@ -1,31 +1,38 @@
-# Saved checkpoint — published guided installer
+# Saved checkpoint — fresh Ubuntu test preparation, 2026-10-30
 
-**After a wipe:** this document's old local service/database paths are historical,
-not resources to restore. Read [FRESH_HOST_CODEX_HANDOFF.md](FRESH_HOST_CODEX_HANDOFF.md)
-for a new direct Codex session, credential prompts and isolated test settings.
-The operator explicitly requires no tmux involvement. Continue fresh-install/boot
-acceptance from the published notes; do not assume the old host state survived.
+Authoritative current context: [CURRENT_PROGRESS.md](CURRENT_PROGRESS.md).
+Nonsecret last selected settings: [CURRENT_SETUP.md](CURRENT_SETUP.md).
+Reinstall/Codex/restore commands: [FRESH_HOST_CODEX_HANDOFF.md](FRESH_HOST_CODEX_HANDOFF.md).
+Chronological validation/failure evidence: [TEST_RESULTS.md](TEST_RESULTS.md).
 
-Authoritative resume: [CURRENT_PROGRESS.md](CURRENT_PROGRESS.md).
+Operator authorized publishing all current source/tests/docs to boosted3svt/Installarr
+before an operator-led Ubuntu24.04.5 wipe/reinstall and a full fresh installer test.
+They will privately back up ~/.codex off-machine, restore it while Codex is stopped,
+and resume conversation01a1897b-0699-7b80-ae24-7badc34e2117. If no history backup
+survives, a new chat can read the published checkpoints. No Codex-controlled wipe,
+reboot, service teardown, NAS cleanup or production media migration is requested.
 
-The operator-owned [boosted3svt/Installarr](https://github.com/boosted3svt/Installarr)
-main now contains the guided implementation. Initial publication commit:
-bc9017a4eec41b8bd514901b0067accbdfffdd2c. Fresh public clone, launcher and217tests
-passed. Source/private-value review passed; reference Compose and private stores
-were not published. Each clean installation prompts for needed credentials and
-optional Discord IDs. No saved file, encrypted bundle or manual transfer is part
-of the intended flow.
+Last observed current installation is HomeNet-Test2, seven apps under
+/var/lib/installarr-setup/installations/setup-c2c7141a879e; unit
+installarr-family-c2c7141a879e.service active/enabled, bootstrap inactive/disabled.
+Saved apply reference_poc_ready and automatic_startup verified; seven containers
+running, Plex healthy. Earlier family-9ad2bb7ce113 and family-media stopped/disabled.
+Current sources .103 Public→/media/Media and .102 Public→/media/Media-2 match the
+approved map. Do not start older units. After wiping, ALL this host state is history.
 
-All9apps are running in installarr-freshcheck-aaabe264-v2.service (boot-disabled).
-Config/state/result/live snapshot are under
-/var/tmp/installarr-fresh-acceptance-vhydzwl1: config-v2.json, state-v2, result.json,
-live-checkpoint.json. Bootstrap and the previous3test services are stopped; do not
-start them alongside the new stack because of port conflicts. Current root runtime
-integrity and source match. No fixture command remains running. No reboot performed.
+Publication includes standardized scoped folders/local-NVMe/NFS wizard, fresh-setup
+selection and owned mount switching, prepared categories, full pinned profiles and
+quality sizes, provider diagnostics,60s Arr root deadline and safe transport errors.
+Latest244host tests pass as htpc/root; earlier242test wheels passed supported
+Ubuntu userspaces. Successful seven-app recovery and newer operator-run ready state
+are distinct from upcoming complete clean-host/boot acceptance. Low-level cause
+of original10s Sonarr root stall was not captured/reproduced.
 
-Fresh Ubuntu/systemd and boot acceptance still need an approved clean target and
-reboot coordination. Ordinary application actions and disaster recovery are outside
-this fresh-installer goal. Production NFS defaults are in the guide, but current
-physical writes remain restricted to the approved /media/installarr test export.
-See INTERACTIVE_TEST_QUEUE.md for those remaining actions and TEST_RESULTS.md for
-exact commands, evidence and failed attempts fixed during combined acceptance.
+After reinstall: clone published source, restore Codex history only if desired,
+inspect actual clean host, and run ./installarr.sh without flags. Do not restore
+old app DBs/install state or manually stage Docker/NFS. Fresh credentials/private
+family Discord IDs and Plex claim are collected locally; never chat/Git. Standard
+English subtitles/OpenSubtitles.com, Newshosting100TLS and direct NZBGeek remain.
+Movies prefer1080p with separate manual2160p; TV WEB1080p. Four Plex libraries,
+Music excluded; every app optional. No auxiliary backends/tmux. Coordinate reboot
+acceptance separately. Never use umount -a for NAS cleanup.

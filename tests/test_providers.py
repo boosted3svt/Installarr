@@ -11,6 +11,24 @@ from installarr.providers import SUBTITLES, newshosting, nzbgeek, validate_provi
 
 
 class ProviderSecretsTests(unittest.TestCase):
+    def test_newshosting_connection_limit_has_fixed_guidance_without_remote_text(self):
+        from installarr.providers import require_newshosting_test
+        for message in ('502 Maximum number of connections reached private-account',
+                        '502 too many connections private-account',
+                        '502 max connections reached private-account'):
+            for saved in (False, True):
+                with self.subTest(message=message, saved=saved), self.assertRaises(AppAPIError) as raised:
+                    require_newshosting_test({'result': False, 'message': message}, saved=saved)
+                self.assertIn('connection limit reached', str(raised.exception))
+                self.assertNotIn('private-account', str(raised.exception))
+        for value in ({'result': False, 'message': '502 Authentication failed private-account'},
+                      {'result': False, 'message': ['arbitrary response']}, None):
+            with self.assertRaises(AppAPIError) as raised:
+                require_newshosting_test(value)
+            self.assertNotIn('connection limit reached', str(raised.exception))
+            self.assertNotIn('private-account', str(raised.exception))
+        require_newshosting_test({'result': True})
+
     def test_private_store_reruns_and_checkpoint_excludes_values(self):
         with tempfile.TemporaryDirectory() as directory:
             values = {'newshosting': {'username': 'synthetic-account', 'password': 'synthetic-secret'},

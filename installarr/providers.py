@@ -41,6 +41,20 @@ def required_secrets(config):
     return names
 
 
+def require_newshosting_test(value, saved=False):
+    """Translate known provider refusal without exposing its arbitrary message."""
+    import re
+    if isinstance(value, dict) and value.get('result') is True:
+        return
+    message = value.get('message', '') if isinstance(value, dict) else ''
+    if (isinstance(message, str) and 'connection' in message.lower()
+            and re.search(r'\b502\b', message)
+            and re.search(r'too many|\bmax(?:imum)?\b|limit', message, re.I)):
+        raise AppAPIError('Newshosting connection limit reached. Pause other downloaders using this subscription or free account connections, then retry setup. Credentials were not changed.')
+    raise AppAPIError('Saved Newshosting connection test failed' if saved else
+                      'Newshosting TLS/authentication test failed; no provider setting saved')
+
+
 def newshosting(client, credentials, connections=100, save=True):
     validate_provider_secrets({'newshosting': credentials})
     if type(connections) is not int or not 1 <= connections <= 100:
@@ -68,8 +82,7 @@ def newshosting(client, credentials, connections=100, save=True):
     if matches and not equal(matches[0]):
         raise AppAPIError('Existing Newshosting settings differ; preserved')
     result = client.call('config', name='test_server', **dict(desired, timeout=5)).get('value', {})
-    if not isinstance(result, dict) or result.get('result') is not True:
-        raise AppAPIError('Newshosting TLS/authentication test failed; no provider setting saved')
+    require_newshosting_test(result)
     if save:
         client.call('set_config', section='servers', name=name, **desired)
         rows = client.call('get_config', section='servers').get('config', {}).get('servers', [])
@@ -80,8 +93,7 @@ def newshosting(client, credentials, connections=100, save=True):
             raise AppAPIError('Newshosting server readback differs')
         check = dict(saved[0], server=name, timeout=5)
         check.pop('name', None)
-        if client.call('config', name='test_server', **check).get('value', {}).get('result') is not True:
-            raise AppAPIError('Saved Newshosting connection test failed')
+        require_newshosting_test(client.call('config', name='test_server', **check).get('value', {}), saved=True)
     return {'provider': 'newshosting', **public, 'authentication': 'verified', 'saved': save,
             'download': 'not tested'}
 

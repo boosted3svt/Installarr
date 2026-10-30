@@ -1,5 +1,12 @@
 # Requirements and acceptance boundaries — 2026-10-29
 
+Latest2026-10-30: CURRENT_PROGRESS.md and CURRENT_SETUP.md supersede historical
+pending-input/live-unit statements in this matrix. Full standardized profiles/
+quality sizes, native family notification preferences and a seven-app operator
+ready/enabled run now pass. Current244host suites pass; publication and an
+operator-led Ubuntu24.04.5 reinstall/full fresh guide/boot test are the next work.
+Do not add repeated ordinary application-user actions as acceptance gates.
+
 This matrix maps the operator handoff to actual evidence. “Passed” has the stated
 scope; it never means all environments or a complete release. Current commands,
 private fixture paths and running services are in CURRENT_PROGRESS.md. Exact pins,

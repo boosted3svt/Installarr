@@ -40,6 +40,8 @@ def bundle_identity(config):
 
 
 def data_targets(config):
+    if 'folder_map' in config:
+        return {'media': '/data', 'downloads': '/data/finished-downloads', 'incomplete': '/data/unfinished-downloads'}
     if 'data_root' not in config:
         return dict(DATA_TARGETS)
     root = Path(config['data_root'])
@@ -61,6 +63,12 @@ def application_paths(config, app):
         paths['additional_media_roots'] = ['/media-secondary']
     if app == 'netbootxyz':
         paths['assets_directory'] = config['storage'].get('netboot_assets', str(Path(paths['config_directory']) / 'assets'))
+    if 'folder_map' in config and app in ('sonarr', 'radarr'):
+        from .layout import role, app_entries
+        entry = role(config, 'tv' if app == 'sonarr' else 'movies')
+        paths.update(media_root=entry['target'], host_media_root=entry['host'])
+        paths['additional_media_roots'] = [row['target'] for row in app_entries(config, app)
+                                           if row['role'] != 'finished' and row['target'] != entry['target']]
     return paths
 
 
@@ -90,7 +98,7 @@ def render_bundle(config):
         raise ValueError("Application configuration must be declared local storage")
     expected = storage_assertions(config)
     assertions = []
-    for purpose, target in data_targets(config).items():
+    for purpose, target in ([] if 'folder_map' in config else data_targets(config).items()):
         if purpose not in expected or "sentinel" not in expected[purpose]:
             raise ValueError("Every data mount requires exact assertions and a sentinel")
         if 'data_root' in config:
@@ -99,7 +107,7 @@ def render_bundle(config):
             assertions.append(check)
         else:
             assertions.append(container_mount_assertion(config["storage"][purpose], target, expected[purpose]))
-    data_volumes = ([bind(config['data_root'], '/data')] if 'data_root' in config else
+    data_volumes = ([] if 'folder_map' in config else [bind(config['data_root'], '/data')] if 'data_root' in config else
                     [bind(config['storage'][purpose], target) for purpose, target in DATA_TARGETS.items()])
     guards, services = {}, {}
     directory = Path(config["project_directory"])
@@ -112,7 +120,7 @@ def render_bundle(config):
         if not re.fullmatch(pattern, image["image"]):
             raise ValueError("Application image must have a pinned digest")
         guards[app + ".guard.sh"] = ('#!/bin/sh\nset -eu\ndeny() { exit 78; }\nexec \"$@\"\n'
-                                      if app in ('tautulli', 'ombi', 'netbootxyz') else render_storage_guard(assertions, require_writable=app != 'plex'))
+                                      if 'folder_map' in config or app in ('tautulli', 'ombi', 'netbootxyz') else render_storage_guard(assertions, require_writable=app != 'plex'))
         services[app] = {
             "image": image["image"], "pull_policy": "never", "network_mode": "none", "restart": "no",
             "entrypoint": ["/bin/sh", "/installarr-storage-guard", image["entrypoint"]],
@@ -124,6 +132,14 @@ def render_bundle(config):
                         *([] if app in ('tautulli', 'ombi', 'netbootxyz') else copy.deepcopy(data_volumes)),
                         bind(directory / (app + ".guard.sh"), "/installarr-storage-guard", True)],
         }
+        if 'folder_map' in config:
+            from .layout import app_entries
+            selected = app_entries(config, app)
+            services[app]['volumes'] += [bind(row['host'], row['target'], app == 'plex') for row in selected]
+            if selected:
+                guards[app + '.guard.sh'] = render_storage_guard([
+                    container_mount_assertion(row['host'], row['target'], row['check']) for row in selected],
+                    require_writable=app != 'plex')
     if 'netbootxyz' in services:
         from .netboot import MENU_VERSION
         service = services['netbootxyz']
@@ -136,7 +152,7 @@ def render_bundle(config):
                 raise ValueError('Explicit netboot assets require mount assertions and a sentinel')
             asset_assertion = container_mount_assertion(config['storage']['netboot_assets'], '/assets', check)
             guards['netbootxyz.guard.sh'] = render_storage_guard([asset_assertion])
-    if 'media_secondary' in config['storage'] and not config.get('secondary_media_read_only', True):
+    if 'folder_map' not in config and 'media_secondary' in config['storage'] and not config.get('secondary_media_read_only', True):
         secondary = container_mount_assertion(config['storage']['media_secondary'], '/media-secondary', expected['media_secondary'])
         for app in ('radarr', 'bazarr'):
             if app in services:
@@ -144,7 +160,7 @@ def render_bundle(config):
                 guards[app + '.guard.sh'] = render_storage_guard([*assertions, secondary])
     if 'plex' in services:
         service = services['plex']
-        if 'media_secondary' in config['storage']:
+        if 'folder_map' not in config and 'media_secondary' in config['storage']:
             secondary = container_mount_assertion(config['storage']['media_secondary'], '/media-secondary', expected['media_secondary'])
             guards['plex.guard.sh'] = render_storage_guard([*assertions, secondary], require_writable=False)
             service['volumes'].append(bind(config['storage']['media_secondary'], '/media-secondary', True))

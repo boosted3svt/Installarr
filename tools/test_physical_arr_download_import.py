@@ -18,7 +18,7 @@ import uuid
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from installarr.apply import app_client, configure_apps, wait_for
 from installarr.cli import save_config
-from installarr.compose import IMAGES
+from installarr.compose import IMAGES, application_paths
 from installarr.credentials import read_private_credentials
 from installarr.directories import observed_mount, prepare_directories
 from installarr.profiles import recommended_profiles
@@ -29,10 +29,14 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--resume', type=Path)
     parser.add_argument('--app', choices=('radarr', 'sonarr'), default='radarr')
+    parser.add_argument('--scoped', action='store_true')
+    parser.add_argument('--mountpoint', type=Path, default=Path('/media/Media'))
+    parser.add_argument('--baseline', type=Path, default=Path('/var/lib/installarr-setup/settings.json'))
+    parser.add_argument('--credentials-file', type=Path, default=Path('/var/lib/installarr-setup/login/gui-admin.json'))
     args = parser.parse_args()
-    fd = os.open('/media/installarr', os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    fd = os.open(str(args.mountpoint), os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
     try:
-        assert observed_mount(fd) == {'target': '/media/installarr', 'source': '192.168.1.102:/share/MD0_DATA/Public/installarr', 'fstype': 'nfs'}
+        assert observed_mount(fd) == {'target': str(args.mountpoint), 'source': '192.168.1.102:/share/MD0_DATA/Public/installarr', 'fstype': 'nfs'}
     finally:
         os.close(fd)
     if args.resume:
@@ -42,19 +46,30 @@ def main():
     else:
         work = Path(tempfile.mkdtemp(prefix='installarr-arr-import-', dir='/var/tmp'))
         tag = uuid.uuid4().hex[:8]
-        data = Path('/media/installarr') / ('Installarr-Arr-Import-' + tag)
-        config = json.loads(Path('/var/tmp/installarr-reference-poc-fz5b_65a/http-config.json').read_text())
+        data = args.mountpoint / ('Installarr-Arr-Import-' + tag)
+        config = json.loads(args.baseline.read_text())
         config.update(apps=[args.app, 'sabnzbd'], data_root=str(data), project_directory=str(work / 'project'),
                       quality_profiles=recommended_profiles([args.app]))
-        for key in ('providers', 'provider_secrets_file', 'bazarr_language_profile'):
+        for key in ('providers', 'provider_secrets_file', 'bazarr_language_profile', 'plex_claim_file', 'plex_libraries',
+                    'plex_server_name', 'ombi_family_presets', 'ombi_family_preferences_file', 'secondary_media_read_only', 'folder_map'):
             config.pop(key, None)
+        for key in ('media_secondary', 'netboot_assets'):
+            config['storage'].pop(key, None); config['storage_mounts'].pop(key, None); config['storage_checks'].pop(key, None)
         config['storage'].update(media=str(data), downloads=str(data / 'downloads'), incomplete=str(data / 'incomplete-downloads'),
                                  configs=str(work / 'configs'), backups=str(work / 'backups'))
+        for purpose in ('media', 'downloads', 'incomplete'):
+            check = {'mountpoint': str(args.mountpoint), 'source': '192.168.1.102:/share/MD0_DATA/Public/installarr', 'fstype': 'nfs', 'sentinel': 'health'}
+            config['storage_checks'][purpose] = check
+            config['storage_mounts'][purpose] = dict(check, kind='existing')
+        if args.scoped:
+            from installarr.layout import default_folders
+            config['folder_map'] = default_folders(str(data))
+            config['storage'].update(downloads=str(data / 'finished-downloads'), incomplete=str(data / 'unfinished-downloads'))
         save_config(work / 'config.json', config)
     app = next(app for app in config['apps'] if app in ('radarr', 'sonarr'))
     data = Path(config['data_root'])
     project = 'installarr-arr-import-' + tag
-    credentials = read_private_credentials('/var/tmp/installarr-reference-poc-fz5b_65a/http-state/secrets/gui-admin.json')
+    credentials = read_private_credentials(args.credentials_file)
     print(json.dumps({'evidence': str(work), 'nas_fixture': str(data), 'project': project}), flush=True)
     prepare_directories(config, work / 'directories')
     write_reference_bundle(config, published=False)
@@ -75,7 +90,7 @@ def main():
             if not movie:
                 lookup = arr.json('GET', 'movie/lookup', query={'term': 'tmdb:10331'})
                 movie = arr.json('POST', 'movie', dict(lookup[0], qualityProfileId=configured[app]['quality_profiles']['preferred_id'],
-                    rootFolderPath='/data/Movies', monitored=True, minimumAvailability='released', addOptions={'searchForMovie': False}))
+                    rootFolderPath=application_paths(config, app)['media_root'], monitored=True, minimumAvailability='released', addOptions={'searchForMovie': False}))
             media = movie
             media_endpoint = 'movie/' + str(movie['id'])
             file_endpoint, file_id_field = 'moviefile/', 'movieFileId'
@@ -86,7 +101,7 @@ def main():
             if not series:
                 lookup = arr.json('GET', 'series/lookup', query={'term': 'tvdb:301824'})
                 series = arr.json('POST', 'series', dict(lookup[0], qualityProfileId=configured[app]['quality_profiles']['preferred_id'],
-                    rootFolderPath='/data/TV', monitored=True, seasonFolder=True, seriesType='standard',
+                    rootFolderPath=application_paths(config, app)['media_root'], monitored=True, seasonFolder=True, seriesType='standard',
                     seasons=[dict(row, monitored=row['seasonNumber'] > 0) for row in lookup[0]['seasons']],
                     addOptions={'searchForMissingEpisodes': False, 'searchForCutoffUnmetEpisodes': False}))
             def episode():
@@ -173,10 +188,29 @@ http.server.ThreadingHTTPServer(('0.0.0.0',21120),HTTP).serve_forever()
         arr = wait_for(lambda: app_client(config, controller, app))
         assert arr.json('GET', media_endpoint)[file_id_field] == file['id']
         assert hashlib.sha256(host_file.read_bytes()).hexdigest() == expected['sha256']
+        scoped_checks = {}
+        if 'folder_map' in config:
+            from installarr.quality_sizes import ensure_quality_sizes
+            before = arr.json('GET', 'qualitydefinition')
+            scoped_checks['quality_sizes'] = ensure_quality_sizes(arr, app)
+            assert arr.json('GET', 'qualitydefinition') == before
+            for client_app in (app, 'sabnzbd'):
+                client = wait_for(lambda: app_client(config, controller, client_app))
+                forbidden = '/data/unfinished-downloads' if client_app == app else application_paths(config, app)['media_root']
+                controller.run(controller.docker + ['exec', client.transport.container, '/bin/sh', '-c', 'test ! -e "$1"', 'check', forbidden])
+            category = application_paths(config, app)['download_category']
+            controller.run(controller.docker + ['exec', arr.transport.container, '/bin/sh', '-c', 'test -d "$1"', 'check', '/data/finished-downloads/' + category])
+            again = configure_apps(config, controller, credentials, restart, download_host='sabnzbd')
+            assert again[app]['root_id'] == configured[app]['root_id']
+            assert again[app]['downloader']['id'] == configured[app]['downloader']['id']
+            scoped_checks['rerun_ids_stable'] = True
+            scoped_checks['forbidden_folder_absent'] = True
+            scoped_checks['category_visible'] = True
         result = {'status': 'passed', 'pipeline': 'native release decision -> SAB NNTP/yEnc -> completed-download import',
                   'generated_file': actual, 'history_events': events, 'app': app, 'media_file_id': file['id'],
                   'advertised_release_size': 'synthetic 4GiB metadata; actual bytes above',
                   'providers': 'loopback generated fixture only; not real indexer/NNTP acceptance', 'restart': 'passed'}
+        result['scoped_checks'] = scoped_checks
         (work / 'result.json').write_text(json.dumps(result, indent=2) + '\n'); print(json.dumps(result), flush=True)
     except Exception:
         print(json.dumps({'failed_stage': stage}), flush=True)

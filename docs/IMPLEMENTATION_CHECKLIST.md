@@ -1,5 +1,46 @@
 # Installarr implementation checklist
 
+## Current acceptance target — 2026-10-30
+
+- [x] Standardized seven-app operator run HomeNet-Test2 completed protected bootstrap,
+      published GUI checks and automatic-startup selection; saved ready state observed.
+- [x] Arr root requests have bounded60s deadlines and safe diagnostics;244host tests pass.
+- [x] Current settings/host ownership and recent failure evidence recorded in
+      CURRENT_SETUP.md and CURRENT_PROGRESS.md; old live-stack entries below are historical.
+- [ ] Publish current implementation and verify a fresh public clone.
+- [ ] Operator-led Ubuntu24.04.5 reinstall, then complete no-flag fresh installation.
+- [ ] Separately coordinated reboot/reconnect and absent-storage boot acceptance.
+
+The operator backs up/restores Codex history only; no old app DBs or installer
+state will be restored into this test. Publication does not authorize a wipe,
+reboot, NAS cleanup or broader host changes.
+
+## Latest standardized-storage implementation (2026-10-29)
+
+- [x] Operator approved empty standardized media-* folders, no new Music library,
+      and dedicated netboot export's assets child. Latest names supersede older
+      sports/StandUp/TV conventions below for new guided installations.
+- [x] Explicit local/NVMe/NAS/existing storage, editable per-role folders and mixed
+      download storage, with exact checks and no absent-drive OS-disk fallback.
+- [x] Strict per-app binds, shared canonical paths, four-library Plex policy,
+      all relevant Arr roots and dynamic family routes.
+- [x] SAB completed-category directories prepared and verified inside containers;
+      scoped access/read-only checks and relevant Arr health gate.
+- [x] Separate pinned movie/series quality-size adapter, conflict preservation,
+      real API readback/restart/rerun on both Arr apps.
+- [x] Real generated Radarr/SAB and Sonarr/SAB downloads/imports under narrow binds;
+      hashes/ownership, stable reruns and forbidden paths checked.
+- [x] Physical local-only SAB, absent-source pre-write refusal, Plex guarded bind
+      and actual read-only write denial (no duplicate Plex server started).
+- [x]1022native Compose configurations and242tests in host/root and installed-wheel
+      Ubuntu20.04/24.04 userspaces. Plain real PTY local-only save/cancel passed.
+- [x] Explicit fresh-setup selection preserves prior DBs/settings, reuses private
+      inputs and supports bounded owned mount replacement with private backups.
+      Root fixture tests cover fstab preservation/idempotence; actual live switch
+      has not been performed by Codex. Fresh Plex DB needs new owner claim.
+- [ ] Operator-run standardized production nine-app install and UI acceptance.
+- [ ] Coordinated reboot/absent-storage boot acceptance; no reboot authorized.
+
 Resumed2026-10-28 for autonomous work during operator absence; see AUTONOMOUS_WORK_PLAN.md and INTERACTIVE_TEST_QUEUE.md. Current resume commands and live service ownership are in
 CURRENT_PROGRESS.md. TEST_RESULTS.md retains chronological evidence, including
 failed experiments. A milestone is a progress update, not a reason to stop.

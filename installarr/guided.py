@@ -68,12 +68,37 @@ def checked_answer(label, default, validator):
             validator(value)
             return value
         except (ValueError, OSError):
-            print('That answer could not be used. Please check it and try again.')
+            if validator is folder:
+                print('Enter a full folder path starting with /, or press Enter to use the suggested folder. Do not enter yes or no.')
+            else:
+                print('That answer could not be used. Please check it and try again.')
 
 
 def folder(value):
-    if not Path(value).is_absolute() or '..' in Path(value).parts:
+    from .hostplan import absolute_path
+    if not absolute_path(value):
         raise ValueError('Choose a full folder path')
+
+
+def one_of(*options):
+    def validate(value):
+        if value not in options:
+            raise ValueError('Choose one of the listed options')
+    return validate
+
+
+def folder_in_mount(path, point, label):
+    while Path(path) != Path(point) and Path(point) not in Path(path).parents:
+        print('The media folder must be inside the connected NAS folder: ' + point)
+        path = checked_answer(label, point, folder)
+    return path
+
+
+def nfs_source(value):
+    from .hostplan import validate_mounts
+    # Use the same source validation as the installation plan, before advancing.
+    validate_mounts({'storage': {'media': '/media/Media'}, 'storage_mounts': {
+        'media': {'kind': 'nfs', 'mountpoint': '/media/Media', 'source': value, 'fstype': 'nfs'}}})
 
 
 def summary(config):
@@ -88,7 +113,65 @@ def summary(config):
         print('  Movies: prefer 1080p; 4K is available for manual upgrades.')
     if 'bazarr' in config['apps']:
         print('  Subtitles: standard English; OpenSubtitles.com when selected.')
+    if 'folder_map' in config:
+        from .layout import app_entries
+        from .hostplan import storage_assertions
+        print('  Selected filesystems:')
+        for point, source, kind in sorted({(row['mountpoint'], row['source'], row['fstype'])
+                                          for row in storage_assertions(config).values()}):
+            print('    {} -> {} ({})'.format(source, point, kind))
+        print('  Storage map (Ubuntu folder -> container folder):')
+        for app in config['apps']:
+            for row in app_entries(config, app):
+                print('    {}: {} -> {} ({})'.format(app, row['host'], row['target'], 'read-only' if app == 'plex' else 'read/write'))
+        if 'netboot_assets' in config['storage']:
+            print('    netboot.xyz: {} -> /assets (read/write)'.format(config['storage']['netboot_assets']))
+        print('  Separate folder access can require copy-then-delete imports rather than instant moves.')
     print('  Existing media files will be preserved.')
+
+
+def choose_storage(label, root_default, inventory, source_default=None, point_default=None):
+    from .storage import covering_mount
+    from .directories import LOCAL_FILESYSTEMS
+    kind = checked_answer('Storage for ' + label + ': local / nas / existing',
+                          'nas' if source_default else 'local',
+                          one_of('local', 'nas', 'existing'))
+    root = checked_answer('Folder for ' + label, root_default, folder)
+    if kind == 'nas':
+        source = checked_answer('NAS address and shared folder for ' + label, source_default or '', nfs_source)
+        point = checked_answer('Connect this NAS at this folder', point_default or root, folder)
+        root = folder_in_mount(root, point, 'Folder for ' + label)
+        check = {'mountpoint': point, 'source': source, 'fstype': 'nfs', 'sentinel': 'installarr-health'}
+        mount = dict(check, kind='nfs')
+        if yes('Does this NAS need specific NFS connection ports?', False):
+            def port(value):
+                if not 1 <= int(value) <= 65535:
+                    raise ValueError('Invalid port')
+            protocol = checked_answer('Mount-service protocol: tcp / udp', 'udp',
+                                      one_of('tcp', 'udp'))
+            mount['nfs_transport'] = {'port': int(checked_answer('NFS port', '2049', port)),
+                                     'mountport': int(checked_answer('Mount-service port', '30000', port)),
+                                     'mountproto': protocol, 'mountvers': 3}
+        return root, mount, check
+    actual = covering_mount(root, inventory.get('filesystems', []))
+    if not actual or inventory.get('status') != 'observed':
+        raise ValueError('Unable to identify selected storage; no host changes made')
+    if kind == 'local':
+        if actual['fstype'] not in LOCAL_FILESYSTEMS:
+            raise ValueError('Selected local storage is not on a supported local filesystem')
+        if yes('Is this folder on a separate mounted drive?', actual['target'] != '/'):
+            point = checked_answer('Exact mount folder for that drive', actual['target'] if actual['target'] != '/' else '/media/nvme', folder)
+            if actual['target'] != point:
+                raise ValueError('Selected drive is not mounted; refusing to use the operating-system disk instead')
+    else:
+        point = checked_answer('Exact mount folder for this existing storage', actual['target'],
+                               lambda value: None if value == '/' else folder(value))
+        if point != actual['target']:
+            raise ValueError('Selected existing filesystem is absent; no local fallback allowed')
+    print('  Using filesystem {} ({}) mounted at {}'.format(actual['source'], actual['fstype'], actual['target']))
+    check = {'mountpoint': actual['target'], 'source': actual['source'], 'fstype': actual['fstype'], 'sentinel': 'installarr-health'}
+    mount = dict(check, kind='existing') if actual['fstype'] in ('nfs', 'nfs4', 'cifs') else {'kind': 'local'}
+    return root, mount, check
 
 
 def collect_settings(base):
@@ -104,32 +187,12 @@ def collect_settings(base):
         selected = [name for name, label, default in APPS if yes('Use ' + label + '?', default)]
         if not selected:
             print('Please choose at least one program to set up.')
-    print('\nWhere are your media files? Enter a folder on this computer, including an already connected NAS.')
-    print('If your NAS is not connected yet, choose "no" below; setup can connect an NFS share.')
-    root = checked_answer('Folder for media and downloads', '/media/Media', folder)
     inventory = mount_inventory(command)
-    actual = covering_mount(root, inventory.get('filesystems', []))
-    connected = yes('Is the media drive or NAS already connected?',
-                    bool(actual and actual.get('fstype') in ('nfs', 'nfs4', 'cifs')))
-    if connected:
-        if inventory['status'] != 'observed':
-            raise ValueError('Unable to identify the media drive')
-        actual = covering_mount(root, inventory['filesystems'])
-        if not actual:
-            raise ValueError('Unable to identify the media drive')
-        check = {'mountpoint': actual['target'], 'source': actual['source'],
-                 'fstype': actual['fstype'], 'sentinel': 'installarr-health'}
-        mount = dict(check, kind='existing') if actual['fstype'] in ('nfs', 'nfs4', 'cifs') else {'kind': 'local'}
-    else:
-        print('Use the NFS server and shared-folder address supplied with your NAS settings.')
-        source = ask('NAS address and shared folder', '192.168.1.103:/share/MD0_DATA/Public')
-        point = ask('Connect the NAS at this folder', '/media/Media')
-        if Path(root) != Path(point) and Path(point) not in Path(root).parents:
-            print('The media folder must be inside the connected NAS folder.')
-            root = ask('Folder for media and downloads', point)
-        check = {'mountpoint': point, 'source': source, 'fstype': 'nfs', 'sentinel': 'installarr-health'}
-        mount = dict(check, kind='nfs')
-    paths = {'media': root, 'downloads': root + '/downloads', 'incomplete': root + '/incomplete-downloads',
+    print('\nChoose storage. Local disks and NVMe work without a NAS. Existing files will not be moved.')
+    root, mount, check = choose_storage('primary media', '/media/Media', inventory,
+                                        '192.168.1.103:/share/MD0_DATA/Public', '/media/Media')
+    paths = {'media': root, 'downloads': checked_answer('Finished downloads folder', root + '/finished-downloads', folder),
+             'incomplete': checked_answer('Unfinished downloads folder', root + '/unfinished-downloads', folder),
              'configs': str(base / 'apps'), 'backups': str(base / 'backups')}
     config = {'schema_version': 1, 'apps': selected, 'hostname': platform.node(),
               'timezone': checked_answer('Time zone', 'America/Chicago', validate_timezone),
@@ -138,26 +201,45 @@ def collect_settings(base):
               'service_user': media_identity(), 'data_root': root,
               'storage': paths, 'storage_mounts': {key: dict(mount) for key in ('media', 'downloads', 'incomplete')},
               'storage_checks': {key: dict(check) for key in ('media', 'downloads', 'incomplete')}}
+    if yes('Use different storage for downloads?', False):
+        for purpose, label in (('downloads', 'finished downloads'), ('incomplete', 'unfinished downloads')):
+            path, selected_mount, selected_check = choose_storage(label, paths[purpose], inventory)
+            paths[purpose] = path
+            config['storage_mounts'][purpose] = selected_mount
+            config['storage_checks'][purpose] = selected_check
+    else:
+        for purpose, label in (('downloads', 'Finished downloads folder'), ('incomplete', 'Unfinished downloads folder')):
+            paths[purpose] = folder_in_mount(paths[purpose], check['mountpoint'], label)
+    from .layout import FOLDERS, default_folders
+    config['folder_map'] = default_folders(root)
+    print('Choose each media folder. Accept a new standardized folder, or select an existing populated folder.')
+    def primary_folder(value):
+        folder(value)
+        if Path(root) not in Path(value).parents:
+            raise ValueError('Choose a subfolder of the selected primary media root')
+    for key in FOLDERS:
+        config['folder_map'][key] = checked_answer('Media folder for ' + key.replace('_', ' '), config['folder_map'][key], primary_folder)
     config['storage_mounts'].update(configs={'kind': 'local'}, backups={'kind': 'local'})
     if 'plex' in selected:
         config.update(plex_server_name=ask('Name to show in Plex', 'Family Media'),
-                      plex_libraries=reference_libraries(), plex_claim_file=str(base / 'plex' / 'plex-claim.txt'))
-        print('Plex will group movie folders in Movies and TV folders in TV, plus sports, StandUp and Music.')
-    if set(selected) & {'plex', 'radarr', 'bazarr'} and yes('Also use the additional movie folder on the second NAS?', True):
-        secondary_path, secondary_mount, secondary_check = additional_movies(inventory)
+                      plex_claim_file=str(base / 'plex' / 'plex-claim.txt'))
+    if set(selected) & {'plex', 'radarr', 'bazarr'} and yes('Also use additional movie storage?', mount['kind'] != 'local'):
+        secondary_path, secondary_mount, secondary_check = choose_storage('additional movies', '/media/Media-2/media-movies-2', inventory,
+            '192.168.1.102:/share/MD0_DATA/Public' if mount['kind'] != 'local' else None, '/media/Media-2')
         config['storage']['media_secondary'] = secondary_path
         config['storage_mounts']['media_secondary'] = secondary_mount
         config['storage_checks']['media_secondary'] = secondary_check
         config['secondary_media_read_only'] = False
     if 'netbootxyz' in selected:
-        assets = checked_answer('Folder for network boot files', '/media/netbootxyz/assets', folder)
-        actual = covering_mount(assets, inventory.get('filesystems', []))
-        if not actual:
-            raise ValueError('Unable to identify the drive for network boot files')
-        asset_check = {'mountpoint': actual['target'], 'source': actual['source'], 'fstype': actual['fstype'], 'sentinel': 'installarr-assets-health'}
+        assets, asset_mount, asset_check = choose_storage('network boot assets', '/media/netbootxyz/assets', inventory,
+            '192.168.1.102:/share/MD0_DATA/netbootxyz' if mount['kind'] != 'local' else None, '/media/netbootxyz')
         config['storage']['netboot_assets'] = assets
         config['storage_checks']['netboot_assets'] = asset_check
-        config['storage_mounts']['netboot_assets'] = dict(asset_check, kind='existing') if actual['fstype'] in ('nfs', 'nfs4', 'cifs') else {'kind': 'local'}
+        config['storage_mounts']['netboot_assets'] = asset_mount
+    if 'plex' in selected:
+        from .layout import libraries
+        config['plex_libraries'] = libraries(config)
+        print('Plex libraries: Movies, TV Shows, Sports and Standup. Music is excluded; files are preserved.')
     if set(selected) & {'radarr', 'sonarr'}:
         config['quality_profiles'] = recommended_profiles(selected)
     if {'ombi', 'plex'} <= set(selected) and set(selected) & {'radarr', 'sonarr'}:
@@ -212,7 +294,7 @@ def is_administrator():
     return os.geteuid() == 0
 
 
-def run_setup(base=Path('/var/lib/installarr-setup')):
+def run_setup(base=Path('/var/lib/installarr-setup'), continue_as_admin=False, selection_root=None):
     from .execution import private_directory
     from .cli import save_config, validate
     from .credentials import initialize_credentials, read_private_json
@@ -222,21 +304,35 @@ def run_setup(base=Path('/var/lib/installarr-setup')):
     if not sys.stdin.isatty():
         print('Open Installarr in a terminal to follow the setup guide. Advanced commands support unattended use.')
         return 2
-    print('\nWelcome to Installarr\nSet up your family media server, or continue a saved installation.')
-    print('This guide installs your programs and connects them to your media folders and accounts.')
-    if not yes('Continue?', True):
-        return 0
+    if not continue_as_admin or not is_administrator():
+        print('\nWelcome to Installarr\nSet up your family media server, or continue a saved installation.')
+        print('This guide installs your programs and connects them to your media folders and accounts.')
+        if not yes('Continue?', True):
+            return 0
     if not is_administrator():
         print('Ubuntu needs your computer administrator password to install programs.')
-        os.execvp('sudo', ['sudo', sys.executable, '-m', 'installarr', 'setup'])
+        os.execvp('sudo', ['sudo', sys.executable, '-m', 'installarr', 'setup', '--continue-as-admin'])
         return 1
-    base = private_directory(base)
+    from .setup_revisions import selected_setup, new_setup, activate_setup
+    root = private_directory(selection_root or base)
+    base = private_directory(base) if selection_root else selected_setup(root)
+    metadata_path = base / 'installation.json'
+    metadata = read_private_json(metadata_path) if os.path.lexists(str(metadata_path)) else {}
+    name = metadata.get('name', 'family-media')
+    previous = metadata.get('previous')
     path = base / 'settings.json'
     if path.exists():
         config = validate(read_private_json(path))
         print('\nFound your saved setup. Your account details will be reused; you do not need to enter them again.')
         summary(config)
+        if 'folder_map' not in config:
+            print('This saved setup uses the older folder layout. To use the standardized folders, answer no below, then choose a fresh installation.')
         if not yes('Continue this saved installation?', True):
+            if yes('Create a fresh installation with new storage choices?', False):
+                print('The previous app databases and Plex server will be preserved and stopped when you start installation.')
+                print('This fresh installation uses new app databases and will need its own Plex authorization.')
+                destination = new_setup(root, base, name, config)
+                return run_setup(destination, continue_as_admin=True, selection_root=root)
             print('Saved settings kept. No installation started.')
             return 0
     else:
@@ -246,22 +342,35 @@ def run_setup(base=Path('/var/lib/installarr-setup')):
         if not yes('Save these choices?', True):
             return 0
         save_config(path, config)
+        activate_setup(root, base)
     if not yes('Start installation? This can install packages, connect storage and start the selected programs.', False):
         print('Your choices are saved. Run installarr again whenever you are ready.')
         return 0
     gui = base / 'login'
     from .credentials import validate_selected_gui_credentials
-    initialize_credentials(gui, lambda: validate_selected_gui_credentials(config, collect_gui()))
+    from .credentials import read_private_credentials
+    def gui_input():
+        value = read_private_credentials(Path(previous['login'])) if previous and Path(previous['login']).exists() else collect_gui()
+        return validate_selected_gui_credentials(config, value)
+    initialize_credentials(gui, gui_input)
     names = sorted(required_secrets(config))
     if names:
         target = Path(config['provider_secrets_file'])
-        initialize_provider_secrets(target.parent, names, collect_provider, target.name)
+        from .provider_secrets import read_provider_secrets
+        old_providers = read_provider_secrets(Path(previous['providers'])) if previous and previous.get('providers') and Path(previous['providers']).exists() else {}
+        initialize_provider_secrets(target.parent, names,
+                                    lambda provider: old_providers[provider] if provider in old_providers else collect_provider(provider), target.name)
     if config.get('ombi_family_preferences_file'):
-        from .ombi_family import initialize_family_preferences
-        initialize_family_preferences(Path(config['ombi_family_preferences_file']).parent, collect_family)
+        from .ombi_family import initialize_family_preferences, read_family_preferences
+        initialize_family_preferences(Path(config['ombi_family_preferences_file']).parent,
+            lambda: read_family_preferences(Path(previous['family'])) if previous and previous.get('family') and Path(previous['family']).exists() else collect_family())
     state = base / 'state'
     print('\nPreparing the computer and downloading programs. This can take a while.')
-    apply_reference(config, 'family-media', state, credentials_file=gui / 'gui-admin.json', prepare_only=True)
+    if previous:
+        from .setup_revisions import prepare_switch
+        print('Preserving and stopping the prior owned installation before connecting the selected storage.')
+        prepare_switch(config, base, previous)
+    apply_reference(config, name, state, credentials_file=gui / 'gui-admin.json', prepare_only=True)
     ready = read_private_json(state / 'state.json').get('phase') == 'reference_poc_ready'
     if 'plex' in config['apps'] and not ready:
         print('\nPlex needs your permission to connect this server to your account.')
@@ -270,11 +379,11 @@ def run_setup(base=Path('/var/lib/installarr-setup')):
         target = Path(config['plex_claim_file'])
         store_claim(target.parent, lambda: getpass.getpass('Plex claim code (hidden): '), replace=True, filename=target.name)
     print('\nConnecting the programs and checking sign-in and storage access.')
-    apply_reference(config, 'family-media', state, credentials_file=gui / 'gui-admin.json')
+    apply_reference(config, name, state, credentials_file=gui / 'gui-admin.json')
     automatic_start = yes('Start these programs automatically when this computer turns on?', True)
     if automatic_start:
         from .boot import enable_startup
-        enable_startup(config, 'family-media', state)
+        enable_startup(config, name, state)
     print('\nSetup checks finished. Open your programs at:')
     ports = {'plex': '32400/web', 'radarr': '7878', 'sonarr': '8989', 'sabnzbd': '8090', 'bazarr': '6767',
              'ombi': '3579', 'tautulli': '8181', 'jackett': '9117', 'netbootxyz': '3250'}
@@ -317,7 +426,8 @@ def additional_movies(inventory):
         mount = dict(check, kind='existing') if actual['fstype'] in ('nfs', 'nfs4', 'cifs') else {'kind': 'local'}
     else:
         point = checked_answer('Connect the second NAS at this folder', '/media/NAS', folder)
-        source = ask('Second NAS address and shared folder', '192.168.1.102:/share/MD0_DATA/Public')
+        source = checked_answer('Second NAS address and shared folder', '192.168.1.102:/share/MD0_DATA/Public', nfs_source)
+        path = folder_in_mount(path, point, 'Additional movie folder')
         check = {'mountpoint': point, 'source': source, 'fstype': 'nfs', 'sentinel': 'installarr-health'}
         mount = dict(check, kind='nfs')
     return path, mount, check

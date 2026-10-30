@@ -108,6 +108,27 @@ def app_client(config, controller, app, credentials=None):
     return client
 
 
+def verify_scoped_paths(config, controller, app):
+    if 'folder_map' not in config:
+        return
+    from .layout import app_entries
+    rows = controller.inventory()
+    controller.audit(rows)
+    container = next(row['Id'] for row in rows if row['Config']['Labels']['com.docker.compose.service'] == app)
+    checks = app_entries(config, app)
+    paths = [row['target'] for row in checks]
+    if app in ('radarr', 'sonarr', 'sabnzbd'):
+        paths += ['/data/finished-downloads/' + category for category in ('movies', 'tv')]
+    if paths:
+        script = 'for path do test -d "$path" && test -r "$path" && test -x "$path" || exit 1; '
+        script += ('test ! -w "$path"' if app == 'plex' else 'test -w "$path"') + ' || exit 1; done'
+        try:
+            controller.run(controller.docker + ['exec', '--user', '{}:{}'.format(config['service_user']['uid'], config['service_user']['gid']),
+                           container, '/bin/sh', '-c', script, 'installarr-path-check'] + paths)
+        except (OSError, ValueError):
+            raise ApplyError('Application media/download folders are missing or have incorrect access; setup remains incomplete') from None
+
+
 def configure_apps(config, controller, credentials, restart, download_host="127.0.0.1", family_state_directory=None, provider_credentials=None):
     from .credentials import validate_selected_gui_credentials
     validate_selected_gui_credentials(config, credentials)
@@ -129,6 +150,7 @@ def configure_apps(config, controller, credentials, restart, download_host="127.
             sab = wait_for(lambda: app_client(config, controller, 'sabnzbd'))
         auth = sab.verify_admin(credentials)
         sab.configure_storage(config)
+        verify_scoped_paths(config, controller, 'sabnzbd')
         evidence['sabnzbd'] = {'authentication': auth, 'storage': 'verified'}
         if 'newshosting' in provider_choices:
             from .providers import newshosting
@@ -157,9 +179,17 @@ def configure_apps(config, controller, credentials, restart, download_host="127.
             item['quality_profiles'] = {'available': profiles,
                 'preferred_id': profiles[choice['default']]['id'],
                 'existing_assignments': 'preserved'}
+            if 'folder_map' in config:
+                from .quality_sizes import ensure_quality_sizes
+                item['quality_sizes'] = ensure_quality_sizes(client, app)
         if 'nzbgeek' in provider_choices:
             from .providers import nzbgeek
             item['indexer'] = nzbgeek(client, app, provider_credentials['nzbgeek'])
+        verify_scoped_paths(config, controller, app)
+        if 'folder_map' in config:
+            problems = client.json('GET', 'health')
+            if any('does not appear to exist' in str(row.get('message', '')) and 'download' in str(row.get('message', '')).lower() for row in problems):
+                raise ApplyError('Application reports an inaccessible completed-download folder; setup remains incomplete')
         evidence[app] = item
     if 'bazarr' in config['apps']:
         client = wait_for(lambda: app_client(config, controller, 'bazarr'))
@@ -173,6 +203,7 @@ def configure_apps(config, controller, credentials, restart, download_host="127.
                 backend = wait_for(lambda: app_client(config, controller, app))
                 links[app] = client.connect_arr(app, backend.transport.api_key, backend.expected_version)
         evidence['bazarr'] = {'authentication': auth, 'integrations': links}
+        verify_scoped_paths(config, controller, 'bazarr')
         if config.get('bazarr_language_profile') == 'english-standard':
             evidence['bazarr']['subtitle_profile'] = client.configure_english_subtitles()
         if 'bazarr' in provider_choices:
@@ -218,6 +249,7 @@ def configure_apps(config, controller, credentials, restart, download_host="127.
         evidence['plex'] = wait_for(client.verify_authorization)
         from .plex import configure_server
         evidence['plex']['configuration'] = configure_server(client, config)
+        verify_scoped_paths(config, controller, 'plex')
         if 'ombi' in config['apps']:
             ombi = wait_for(lambda: app_client(config, controller, 'ombi'))
             status = client.status()

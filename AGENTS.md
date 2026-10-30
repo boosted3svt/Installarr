@@ -587,3 +587,30 @@ production NFS defaults are not authorization to access production. Ask before r
 Current known acceptance: nine-app combined configuration, cold Plex initialization,
 217-test host/installed-wheel/public-clone checks. Remaining: actual clean-host/systemd
 and boot acceptance. Source/API logic unchanged by this documentation correction.
+
+
+## Publication and upcoming clean test — 2026-10-30 (latest)
+
+Operator explicitly requests publishing ALL reviewed current implementation/tests/
+docs to boosted3svt/Installarr before their Ubuntu24.04.5 reinstall. They will
+back up ~/.codex off-machine and restore it to resume this conversation. No wipe,
+reboot, service teardown or media cleanup by Codex. Current authoritative context:
+docs/CURRENT_PROGRESS.md, docs/SAVED_CHECKPOINT.md, docs/CURRENT_SETUP.md and
+docs/FRESH_HOST_CODEX_HANDOFF.md; these supersede old live-service/pause statements.
+
+Read-only observation now finds NEW successful operator-run HomeNet-Test2, seven
+apps under /var/lib/installarr-setup/installations/setup-c2c7141a879e, unit
+installarr-family-c2c7141a879e.service active/enabled; bootstrap inactive/disabled,
+reference_poc_ready and automatic_startup verified. Previous family-9ad2bb7ce113
+and family-media stopped/disabled. Current mounts .103 Public→/media/Media and
+.102 Public→/media/Media-2 match selected sources. Keep this deployment unchanged.
+After the wipe, all those host resources are historical: restore conversation
+only if desired, clone published code and let ./installarr.sh provision fresh
+accounts/packages/mounts/DBs. Fresh private credentials and Plex claim are intentional.
+
+Publication includes scoped standardized folders, full pinned profile/quality sizes,
+local/NVMe/NFS guide, fresh-setup switching and safe provider/Arr timeout diagnostics.
+244host tests and current244test supported-distro wheels pass. Original Sonarr
+10s stall cause not proved; no blind mutating retry. Never umount -a for NAS cleanup.
+Next goal is full clean-OS/systemd install and coordinated boot/mount acceptance,
+not repeated ordinary user actions. Every app remains optional; no new backends.

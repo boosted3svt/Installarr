@@ -1,5 +1,17 @@
 # Physical test host and local Codex
 
+## Current scope — 2026-10-30
+
+Read CURRENT_PROGRESS.md and CURRENT_SETUP.md first. The latest operator-run
+HomeNet-Test2 seven-app installation is ready and enabled; older live-unit lists
+below are historical. Operator now plans an Ubuntu24.04.5 reinstall and a full
+fresh-install test after publication, privately preserving Codex history only.
+FRESH_HOST_CODEX_HANDOFF.md covers exact resume/install steps and an alternative
+isolated-storage recipe. Use only sources/folders selected by the operator; do not
+silently substitute exports, restore old app state, run a wipe/reboot or use
+umount -a. Latest recorded real mounts are .103 Public at/media/Media and .102
+Public at/media/Media-2. No new host/media mutation is part of publication.
+
 This is a dedicated physical Ubuntu server, not a VM. It has OpenSSH and an isolated
 VLAN allowing NAS and Internet access. The operator supplies isolated NAS storage.
 No production test run is needed. Read AGENTS.md for implementation requirements.

@@ -8,6 +8,20 @@ def absolute_path(value):
     ) and not any(c.isspace() for c in value) and "\x00" not in value
 
 
+def declared_nfs_transport(mount):
+    """Explicit NAS endpoints, never arbitrary mount options or weaker locking."""
+    if 'nfs_transport' not in mount:
+        return []
+    value = mount['nfs_transport']
+    if (mount.get('kind') != 'nfs' or mount.get('fstype') != 'nfs'
+            or not isinstance(value, dict) or set(value) != {'port', 'mountport', 'mountproto', 'mountvers'}
+            or any(type(value[key]) is not int or not 1 <= value[key] <= 65535 for key in ('port', 'mountport'))
+            or value['mountproto'] not in ('tcp', 'udp')
+            or type(value['mountvers']) is not int or value['mountvers'] != 3):
+        raise ValueError('NFS transport requires explicit NFSv3 ports and TCP/UDP mount protocol')
+    return [key + '=' + str(value[key]) for key in ('port', 'mountport', 'mountproto', 'mountvers')]
+
+
 def validate_mounts(config):
     mounts = config.get("storage_mounts", {})
     if not isinstance(mounts, dict) or set(mounts) - set(config["storage"]):
@@ -20,8 +34,11 @@ def validate_mounts(config):
         allowed = {"kind"} if kind == "local" else {"kind", "mountpoint", "source", "fstype", "sentinel"}
         if kind == "smb":
             allowed.add("credentials_file")
+        if kind == 'nfs':
+            allowed.add('nfs_transport')
         if set(mount) - allowed:
             raise ValueError("Unknown mount fields; credentials must not be embedded")
+        transport = tuple(declared_nfs_transport(mount))
         if kind == "local":
             continue
         target, source, fstype = (mount.get(key) for key in ("mountpoint", "source", "fstype"))
@@ -41,7 +58,7 @@ def validate_mounts(config):
             raise ValueError("SMB requires //server/share, cifs and a protected credentials file path")
         if not isinstance(fstype, str) or not fstype:
             raise ValueError("Expected filesystem type is required")
-        identity = (source, fstype, kind, mount.get("credentials_file"),
+        identity = (source, fstype, kind, mount.get("credentials_file"), transport,
                     purpose_identity(config, purpose) if fstype == "cifs" else None)
         if target in targets and targets[target] != identity:
             raise ValueError("Conflicting sources or persistence policies for one mountpoint")
@@ -66,6 +83,7 @@ def storage_assertions(config):
 
 def preparation_plan(config):
     from .compose import IMAGES
+    from .layout import app_entries
     packages, mounts, directories = set(), {}, []
     for purpose, path in config["storage"].items():
         mount = config.get("storage_mounts", {}).get(purpose)
@@ -84,6 +102,9 @@ def preparation_plan(config):
             mounts[mount["mountpoint"]]["write_identity"] = purpose_identity(config, purpose)
     return {
         "required_storage_packages": sorted(packages),
+        "application_folders": ({app: [dict(host=row['host'], container=row['target'], read_only=app == 'plex')
+                                        for row in app_entries(config, app)]
+                                 for app in config.get('apps', [])} if 'folder_map' in config else {}),
         "required_application_packages": ["openssl"] if "netbootxyz" in config.get("apps", []) else [],
         "mounts": list(mounts.values()), "directories": directories,
         "blockers": (["Storage type has not been selected for every purpose"] if set(config.get("storage_mounts", {})) != set(config["storage"]) else []),

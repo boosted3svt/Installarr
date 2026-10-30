@@ -57,21 +57,36 @@ class DockerHTTP:
         if data is not None:
             lines.append('header = "Content-Type: application/json"')
             lines.append("data = " + json.dumps(json.dumps(data, ensure_ascii=False), ensure_ascii=False))
-        request_timeout = getattr(self, 'request_timeout', 10)
+        # Arr validates/scans a root on registration and on collection readback.
+        # A cold NAS can exceed the ordinary HTTP deadline. Do not retry writes:
+        # the next saved-setup run reads existing roots before creating anything.
+        root_request = path == '/api/v3/rootfolder' and method in ('GET', 'POST')
+        request_timeout = getattr(self, 'request_timeout', 60 if root_request else 10)
         if type(request_timeout) is not int or not 1 <= request_timeout <= 90:
             raise AppAPIError('Invalid application request deadline')
+        app = {8989: 'Sonarr', 7878: 'Radarr'}.get(self.port)
+        operation = 'media-folder request' if root_request else 'application request'
+        timed_out = '{} {} timed out after {} seconds; continue the saved setup to reconcile completed changes'.format(
+            app, operation, request_timeout)
         try:
             result = subprocess.run(["docker", "--host", self.socket, "exec", "--interactive", self.container,
                 "/bin/sh", "-c", 'umask 077; exec curl "$@"', "curl",
                 "-q", "--silent", "--show-error", "--connect-timeout", "3", "--max-time", str(request_timeout),
                 "--config", "-", "--write-out", "\n%{http_code}"],
                 input="\n".join(lines) + "\n", capture_output=True, text=True, timeout=request_timeout + 5, check=False)
+            if result.returncode == 28 and app:
+                raise AppAPIError(timed_out)
             if result.returncode:
-                raise AppAPIError("Application request unavailable")
+                raise AppAPIError('{} {} transport failed (exit {})'.format(app, operation, result.returncode)
+                                  if app else 'Application request failed')
             body, code = result.stdout.rsplit("\n", 1)
             return int(code), body
+        except AppAPIError:
+            raise
+        except subprocess.TimeoutExpired:
+            raise AppAPIError(timed_out if app else 'Application request failed') from None
         except (OSError, subprocess.SubprocessError, ValueError):
-            raise AppAPIError("Application request failed") from None
+            raise AppAPIError('{} {} failed'.format(app, operation) if app else 'Application request failed') from None
 
     def login(self, credentials):
         validate_credentials(credentials)

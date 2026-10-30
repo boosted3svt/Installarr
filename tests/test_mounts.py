@@ -70,3 +70,17 @@ class MountTests(unittest.TestCase):
             rows[0]['source'] = 'nas:/other'
         with patch('subprocess.run', return_value=Mock(returncode=0, stdout=json.dumps({'filesystems': rows}))):
             self.assertEqual(verified_nfs_transport(mount), [])
+
+    def test_explicit_fresh_nfs_transport_needs_no_existing_mount_or_rpc_discovery(self):
+        from unittest.mock import patch
+        from installarr.mounts import verified_nfs_transport, persistence_line
+        mount = {'kind': 'nfs', 'source': 'nas:/test', 'fstype': 'nfs', 'mountpoint': '/mnt/test',
+                 'nfs_transport': {'port': 2049, 'mountport': 30000, 'mountproto': 'udp', 'mountvers': 3}}
+        with patch('subprocess.run') as discovery:
+            options = verified_nfs_transport(mount)
+        discovery.assert_not_called()
+        self.assertEqual(options, ['port=2049', 'mountport=30000', 'mountproto=udp', 'mountvers=3'])
+        line = persistence_line(mount, {'uid': 2000, 'gid': 2000})
+        for option in options + ['proto=tcp', 'hard']:
+            self.assertIn(option, line)
+        self.assertNotIn('soft', line)

@@ -166,9 +166,13 @@ def validate_libraries(config):
         normalized = normalized_name(name)
         if normalized in REMOVED_LIBRARIES:
             raise ValueError('This Plex library was explicitly removed from installer policy')
-        if normalized == 'sports' and (name != 'sports' or locations != ['sports']):
+        if 'folder_map' in config:
+            from .layout import entries
+            if any(path not in {row['role'] for row in entries(config) if row['purpose'] in ('media', 'media_secondary')} for path in locations):
+                raise ValueError('Plex folders must reference explicit media roles')
+        if 'folder_map' not in config and normalized == 'sports' and (name != 'sports' or locations != ['sports']):
             raise ValueError('Use library sports with matching folder sports')
-        if normalized == 'standup' and (name != 'StandUp' or locations != ['StandUp']):
+        if 'folder_map' not in config and normalized == 'standup' and (name != 'StandUp' or locations != ['StandUp']):
             raise ValueError('Use library StandUp with matching folder StandUp')
         for path in locations:
             if (not isinstance(path, str) or not path or PurePosixPath(path).is_absolute()
@@ -193,6 +197,13 @@ def library_paths(config):
     result = []
     for item in validate_libraries(config):
         relative = item.get('relative_paths', [item.get('relative_path')])
+        if 'folder_map' in config:
+            from .layout import role
+            host = [role(config, path)['host'] for path in relative]
+            container = [role(config, path)['target'] for path in relative]
+            result.append(dict(item, host_paths=host, container_paths=container,
+                               host_path=host[0], container_path=container[0]))
+            continue
         host = [str(Path(config['storage']['media']) / path) for path in relative]
         container = [data_targets(config)['media'].rstrip('/') + '/' + path for path in relative]
         if 'media_secondary' in config['storage']:

@@ -163,6 +163,12 @@ def family_paths(config):
     from pathlib import Path
     from .compose import data_targets
     base = data_targets(config)['media'].rstrip('/')
+    if 'folder_map' in config:
+        from .layout import role
+        return {name: {app: {'host_path': role(config, key)['host'], 'container_path': role(config, key)['target']}
+                       for app, key in pairs.items() if app in config['apps']}
+                for name, pairs in {'lenora8': {'radarr': 'lenora_movies', 'sonarr': 'lenora_tv'},
+                                    'rebel739': {'radarr': 'jeremy_movies', 'sonarr': 'jeremy_tv'}}.items()}
     return {name: {app: {'host_path': str(Path(config['storage']['media']) / leaf),
                         'container_path': base + '/' + leaf}
                    for app, leaf in entries.items() if app in config['apps']}

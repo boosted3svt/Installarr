@@ -25,6 +25,24 @@ class HostPlanTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             validate_mounts(config)
 
+    def test_explicit_nfs_transport_is_validated_and_shared_mounts_must_agree(self):
+        import copy
+        value = {'port': 2049, 'mountport': 30000, 'mountproto': 'udp', 'mountvers': 3}
+        config = self.config()
+        for mount in config['storage_mounts'].values():
+            mount['nfs_transport'] = dict(value)
+        validate_mounts(config)
+        self.assertEqual(len(preparation_plan(config)['mounts']), 1)
+        for changes in ({'port': True}, {'port': 0}, {'mountport': 65536},
+                        {'mountproto': 'udp,soft'}, {'mountvers': 2}, {'soft': True}):
+            invalid = copy.deepcopy(config)
+            invalid['storage_mounts']['media']['nfs_transport'].update(changes)
+            with self.subTest(changes=changes), self.assertRaises(ValueError):
+                validate_mounts(invalid)
+        config['storage_mounts']['downloads']['nfs_transport']['mountport'] = 30001
+        with self.assertRaises(ValueError):
+            validate_mounts(config)
+
     def test_existing_and_managed_persistence_choices_cannot_silently_override(self):
         config = self.config()
         config['storage_mounts']['media']['kind'] = 'existing'

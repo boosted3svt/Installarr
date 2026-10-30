@@ -136,6 +136,20 @@ def health_spec(config, local_configs):
         checks.append({'path': config['storage']['media_secondary'], 'sentinel': check['sentinel'],
                        'read_only': config.get('secondary_media_read_only', True), 'expected': {key: check[field] for key, field in
                        (('target', 'mountpoint'), ('source', 'source'), ('fstype', 'fstype'))}})
+    if 'folder_map' in config:
+        from .layout import entries
+        for row in entries(config):
+            if any(check['path'] == row['host'] for check in checks):
+                continue
+            check = row['check']
+            checks.append({'path': row['host'], 'sentinel': check['sentinel'],
+                           'expected': {key: check[field] for key, field in
+                                        (('target', 'mountpoint'), ('source', 'source'), ('fstype', 'fstype'))}})
+        check = expected['downloads']
+        for category in (('movies', 'tv') if set(config['apps']) & {'sabnzbd', 'radarr', 'sonarr'} else ()):
+            checks.append({'path': str(Path(config['storage']['downloads']) / category),
+                           'expected': {key: check[field] for key, field in
+                                        (('target', 'mountpoint'), ('source', 'source'), ('fstype', 'fstype'))}})
     for app in config["apps"]:
         item = {"path": str(Path(config["storage"]["configs"]) / app), "expected": local_configs}
         if app == "netbootxyz":
@@ -414,6 +428,7 @@ def install_service(config, name, reference=False, bootstrap=False):
 Description=Installarr supervised application bundle
 Wants={docker_unit}
 After={docker_unit}
+{mount_dependencies}
 
 [Service]
 Type=exec
@@ -429,6 +444,7 @@ KillMode=control-group
 [Install]
 WantedBy=multi-user.target
 """.format(launcher=launcher, definition=directory / "definition.json",
+           mount_dependencies=('RequiresMountsFor=' + ' '.join(sorted({check['mountpoint'] for check in storage_assertions(config).values()}))) if 'folder_map' in config else '',
            docker_unit="docker.service" if reference else "installarr-test-docker.service")
         ensure_file(Path("/etc/systemd/system") / (project + ".service"), unit.encode())
         command(["systemctl", "daemon-reload"])

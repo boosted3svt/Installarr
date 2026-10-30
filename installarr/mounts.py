@@ -2,7 +2,7 @@
 from pathlib import Path
 import re
 
-from .hostplan import preparation_plan
+from .hostplan import preparation_plan, declared_nfs_transport
 
 
 def unescape(value):
@@ -105,7 +105,7 @@ def mount_options(mount, identity):
 
 
 def persistence_line(mount, identity, transport=None):
-    options = mount_options(mount, identity) + (transport or []) + ['_netdev', 'nofail', 'x-systemd.mount-timeout=15s']
+    options = mount_options(mount, identity) + (declared_nfs_transport(mount) if transport is None else transport) + ['_netdev', 'nofail', 'x-systemd.mount-timeout=15s']
     return '{} {} {} {} 0 0\n'.format(escape_field(mount['source']), escape_field(mount['mountpoint']),
                                       mount['fstype'], ','.join(escape_field(item) for item in options))
 
@@ -214,6 +214,9 @@ def verified_nfs_transport(mount):
     import subprocess
     if mount['kind'] != 'nfs':
         return []
+    declared = declared_nfs_transport(mount)
+    if declared:
+        return declared
     result = subprocess.run(['findmnt', '--kernel', '--list', '--json', '--source', mount['source'],
                              '--output', 'SOURCE,FSTYPE,OPTIONS'], capture_output=True, text=True, timeout=5)
     if result.returncode:
@@ -240,7 +243,7 @@ def verified_nfs_transport(mount):
 def prepare_mounts(config, state_directory=Path('/var/lib/installarr-mounts'), fstab_path=Path('/etc/fstab')):
     import os
     import subprocess
-    from .accounts import provisioning_gate
+    from .accounts import provisioning_gate, HostPrerequisiteError
     from .directories import LOCAL_FILESYSTEMS, observed_mount
     from .anchors import open_anchors
     from .storage_process import run_storage
@@ -307,7 +310,7 @@ def prepare_mounts(config, state_directory=Path('/var/lib/installarr-mounts'), f
                         ','.join(options), '--', mount['source'], '/proc/self/fd/{}'.format(parent)],
                         pass_fds=(parent,), timeout=30, operation='mount')
                     if process.returncode:
-                        raise ValueError('Network mount failed; configuration preserved')
+                        raise HostPrerequisiteError('NAS mount failed. Check the NAS address, export permissions and NFS/RPC reachability. Some NFSv3 servers require explicit mount-service ports. Configuration and existing files were preserved.')
                 finally:
                     os.close(parent)
                 rows = [row for row in runtime_mounts() if row['target'] == mount['mountpoint']]

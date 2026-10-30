@@ -1,5 +1,364 @@
 # Physical test results
 
+## 2026-10-30: publication and operator-led clean-test preparation
+
+Operator explicitly authorized publication of all current reviewed implementation,
+tests and handoff docs before reinstalling Ubuntu24.04.5. They will privately back
+up/restore Codex conversation state; old installer/app databases are not restored
+for acceptance. CURRENT_PROGRESS.md, SAVED_CHECKPOINT.md, CURRENT_SETUP.md and
+FRESH_HOST_CODEX_HANDOFF.md now give a single current resume path and exact source/
+folder/library/provider/family policy, with no private values.
+
+Read-only current-host inspection discovered a NEW successful operator run:
+selected setup-c2c7141a879e, Plex name HomeNet-Test2, seven apps, phase
+reference_poc_ready, all bootstrap/published checks verified, automatic_startup
+verified. Live unit installarr-family-c2c7141a879e.service active/enabled, bootstrap
+inactive/disabled, seven containers running, Plex healthy. Prior family-media and
+family-9ad2bb7ce113 units inactive/disabled. Exact .103 Public→/media/Media and
+.102 Public→/media/Media-2 NFS identities verified. No API writes, service changes,
+NAS/media reads or cleanup performed by publication inspection.
+
+Final244-test host suites: htpc238passed/6skips and root242passed/2skips;
+/tmp/installarr-publication-user.log and /tmp/installarr-publication-root.log.
+Current244-test installed-wheel suites each242passed/2skips on official Ubuntu
+20.04/Python3.8 and24.04/Python3.12 userspaces. Evidence directory:
+/var/tmp/installarr-distribution-pr9mfxnw/{20.04,24.04}. Package entrypoints,
+installed-source identity, pinned catalog/license and atomic runtime checks pass.
+Wheel20.04:624215bytes, SHA256
+23e037d8ddf731be5369b494650495746355979905bda1120e03c5061624207d;
+wheel24.04:624213bytes, SHA256
+db103ecdd099290b3a113bb50878c4edc14f4cf53051a9cca468e81eafb7109e.
+These are userspace/package tests, not clean-OS/systemd/boot acceptance. Temporary
+test containers have no host Docker socket, NAS or credentials mounted.
+
+Python3.8grammar172files, shell syntax and git diff whitespace pass.823reviewable
+files scanned against18actual private saved values and encoded variants: zero
+matching files. GUI/provider passwords/APIkeys, Plex tokens/claims and family IDs
+were never printed. reference_compose.yaml remains ignored/unpublished. Public
+fresh-clone verification is recorded with the publication savepoint after pushing.
+Current live deployment left unchanged. No wipe/reboot/commit to private state.
+
+## 2026-10-29: post-reboot Sonarr folder request and seven-app recovery
+
+Operator reboot at21:15:16UTC restored securityfs. Continued setup ran all seven
+bootstrap containers. SAB auth/storage/Newshosting checks passed; Sonarr configured
+and verified shared GUI auth. Sonarr log shows GET rootfolder200, version200,
+authenticated handler16:17:11.6CDT, no root POST response, then shutdown16:17:21.7.
+Read-only SQLite showed0Sonarr roots/1user,0Radarr roots/users; no Arr integrations
+or pinned profiles yet. Checkpoint bootstrap_auth_and_paths failed. This is
+consistent with the10s HTTP deadline, but original curl stderr/status are not
+retained, so low-level cause cannot be proved. Stop/exit137 during bounded cleanup
+was not an OOM (Docker OOMKilled false). Plex had saved an account token privately.
+
+Minimal owned Sonarr diagnostic started only its existing unpublished container,
+waited for actual status, used60s request bound, and registered the existing
+configured /data/media-tv: HTTP201 in0.518s. Actual root ID1/readback and repeat GET
+passed; container stopped in finally. No data path/credentials changed, media
+moved or duplicate root created. Slow cold request did not reproduce.
+
+DockerHTTP now allows60s for Arr rootfolder GET/POST, retaining ordinary10s and
+outer+5s deadlines. Root readback may scan NAS too. No blind POST retry introduced;
+next resume checks collection before creation. Fixed AppAPIError(ValueError)
+being swallowed by the broad transport exception handler; Arr timeout/transport
+messages contain fixed app/operation labels and numeric statuses, never body,
+stderr, inputs or credentials. Other adapters' existing diagnostic/retry contracts
+remain compatible. Regression tests cover curl28/7, outer timeout, malformed
+response, no retry, correct deadlines and synthetic secret exclusion.
+
+Full current-source apply_reference with original selected config/name/state and
+private GUI input completed in104.44s. Private result:
+/var/lib/installarr-setup/installations/setup-9ad2bb7ce113/accepted-result.json.
+Status reference_poc_ready; all7authenticated published app checks passed, existing
+Plex claim reused, full pinned Arr profiles/sizes/provider links, six Radarr roots
+(including secondary NAS), three Sonarr roots, SAB categories, Bazarr settings,
+four Plex libraries, native Ombi family preferences and Tautulli link configured.
+Active unit installarr-family-9ad2bb7ce113.service remains boot-disabled; seven
+live containers, bootstrap stopped. Retired setup stayed stopped. No runtime
+snapshot refresh, boot enablement, reboot, new NAS fixture/media move or commit.
+
+244-test suite passed: htpc238/6skips, root242/2skips. Logs:
+/tmp/installarr-post-reboot-tests.log and /tmp/installarr-post-reboot-root-tests.log.
+First development suite exposed missing Plex subclass label handling in new error
+context; corrected by scoping detailed diagnostics to Arr ports and preserving
+other adapters' behavior before final suites/full physical apply. Changed files
+parse as Python3.8; git diff whitespace passes. This is saved-install recovery,
+not proof of first cold request reliability or full clean-OS/boot acceptance.
+
+## 2026-10-29 21:04 UTC: operator guided startup blocked by AppArmor interface
+
+Follow-up read-only current-boot journal investigation located the preceding event:
+AppArmor initialized at20:57:02UTC; kernel audit confirms docker-default loaded
+20:57:10UTC. `journalctl -b _COMM=sudo -o short-iso` records
+`COMMAND=/usr/bin/umount -a` at20:58:08UTC, then setup elevation20:58:32UTC.
+Concurrent systemd events show boot EFI, snap, kernel config/tracing/debug,
+mqueue and hugepages mounts deactivated. No individual securityfs unmount event
+was logged, but broad unmount after proven successful AppArmor startup explains
+the later missing interface. It was not disabled at boot. Full system mount repair
+remains outstanding; no reboot/mount/service changes made by this investigation.
+
+Read-only follow-up inspected active-setup.json, selected installation metadata,
+state/state.json and nested mount/directory/bootstrap checkpoints for
+setup-9ad2bb7ce113. Configuration saved21:01:32UTC; bootstrap Compose
+written21:02:00UTC; failed state saved21:04:05UTC. Accounts/prerequisites/mounts/
+directories/Docker/images/Tautulli seed verified; bootstrap_auth_and_paths absent.
+No API configuration was reached. Prior switch-state reports complete.
+
+`docker inspect` restricted to owned containers' Name/State/Mounts showed all seven
+bootstrap containers Created, PID0, never started, exit128, each reporting:
+
+```text
+Could not check if docker-default AppArmor profile was loaded: open /sys/kernel/security/apparmor/profiles: no such file or directory
+```
+
+Docker journal corroborates repeated failures until21:04:02UTC. Read-only
+`findmnt -rn -t securityfs` found no mount; the profiles and lsm interface files
+are absent, while /sys/module/apparmor/parameters/enabled contains Y. Docker info
+reports AppArmor support; apparmor.service active/exited is insufficient runtime
+proof. No sys-kernel-security.mount unit was found. Follow-up cause evidence is
+above; no disabling or bypass of AppArmor was attempted.
+
+Exact findmnt -M checks confirmed .103 Public at /media/Media and .102 Public at
+/media/Media-2, both NFS, matching operator choices. No media contents inspected.
+Bootstrap supervisor is now inactive/disabled after failure cleanup; previous
+family-media also inactive/disabled; new published unit does not exist. Zero running
+containers. New Plex Preferences.xml absent, so no new claim acceptance occurred.
+Container records retain the failure even though supervisor post-stop checkpoint
+now reports stopped. Readiness polling raises ApplyError on timeout; CLI's generic
+ValueError handler suppresses its message, explaining the operator's unhelpful text.
+
+Documentation/checkpoints updated; no code, mounts, packages, services, credentials,
+NAS contents or boot settings changed by diagnosis. No tests run for this docs-only
+record. Repair/normal Docker startup and same-saved-setup rerun remain outstanding.
+
+## 2026-10-29: approved standardized storage, sizes and fresh-setup flow
+
+Operator approved PROPOSED_PRODUCTION_STORAGE_CHANGELOG.md implementation and
+resolved three choices: new standardized folders empty, no Music library in new
+setup, netboot files in the dedicated export's assets child. No media relocation,
+production outage or reboot was authorized. The implementation is in the existing
+checkout, not committed/pushed; original nine-app family-media deployment remains
+active/enabled on its original snapshots and isolated export.
+
+Implemented explicit folder_map (new guide default; legacy configs compatible),
+local/NVMe/NAS/existing choices, separately asserted download storage, editable role
+folders and NFS endpoint prompts. Canonical container paths are /data/media-* plus
+/data/unfinished-downloads and /data/finished-downloads. Secondary is
+/data/media-movies-2. New library names Movies/TV Shows/Sports/Standup. Strict binds
+remove unrelated media access from SAB/Arr/Jackett; Plex media stays RO and its local
+config/transcode remains RW. Bazarr can write subtitles beside managed media.
+Role-specific guarded binds, directory markers, supervisor checks and systemd
+RequiresMountsFor supplement exact filesystem assertions. Missing selected drives
+cannot silently become root-disk storage. Categories movies/tv are prepared before
+startup; inside-container UID/access checks and relevant Arr missing-directory
+health warnings gate success. All Arr/family roots derive from the same role map.
+
+Quality-size adapter uses manifest-verified pinned movie/series size documents,
+runtime qualitydefinition/limits and dynamically resolved IDs; unlimited maxima
+map to API null, preferred values stay explicit. Only tested factory defaults or
+already-pinned values are accepted, so custom edits refuse before any size writes;
+unrelated rows/titles/fields remain unchanged. Per-row interrupted writes resume.
+These are separate from full pinned profiles/CF scores. Schema/default references:
+[Radarr controller](https://raw.githubusercontent.com/Radarr/Radarr/v6.4.4.10685/src/Radarr.Api.V3/Qualities/QualityDefinitionController.cs),
+[Radarr defaults](https://raw.githubusercontent.com/Radarr/Radarr/v6.4.4.10685/src/NzbDrone.Core/Qualities/Quality.cs),
+[Sonarr defaults](https://raw.githubusercontent.com/Sonarr/Sonarr/v4.0.20.3014/src/NzbDrone.Core/Qualities/Quality.cs).
+
+Fresh setup flow preserves previous settings/DBs, creates separate private state,
+reuses private GUI/provider/family inputs, and stops/disables only verified prior
+owned units/containers after Start installation confirmation. Only conflicting
+managed mounts/fstab entries may be replaced; unrelated entries refuse before
+retiring anything. Fstab backup is private/durable/checksum-tracked. Nonempty local
+netboot mountpoint is not hidden: only the exact prior verified assets child can
+be atomically archived unchanged; unrelated contents refuse. Old claimed Plex DB
+is kept stopped, not copied into a concurrent server. Fresh Plex DB needs its own
+private owner claim. Root fixture tests cover selective persistence/idempotence,
+unrelated mount refusal, local asset preservation, save-only selection and unsafe
+selection symlink refusal. Actual production switching is still operator-run
+acceptance; these tests do not certify that unperformed live transition.
+
+### Physical isolated tests on Ubuntu24.04.5
+
+All NAS operations checked exact test source
+192.168.1.102:/share/MD0_DATA/Public/installarr at /media/Media or /media/NAS;
+no production exports were inspected/mounted. New folders are uniquely owned test
+fixtures, not the original supplied examples. Apps ran unpublished, minimal pairs;
+no second complete stack or external deployment backend was added.
+
+1. `sudo python3 -u tools/test_physical_arr_download_import.py --app radarr --scoped`:
+   first implementation /var/tmp/installarr-arr-import-wwgpm9u4 passed native
+   release→synthetic loopback NNTP/SAB→normal import, exact bytes/hash/2000:2000 and
+   restart. Enhanced final test /var/tmp/installarr-arr-import-r09mkng4 passed
+  454484generated bytes, SHA256
+   a403d5ab10e116e1b87aa6d344164c61f6264700aa5edcbadad81ef4f84ae984,
+   grabbed/downloadFolderImported history, forbidden paths absent, category visible,
+   all14movie size limits persisted, stable root/download-client IDs on rerun.
+2. Same command with `--app sonarr --scoped`:
+   /var/tmp/installarr-arr-import-nl0gzniw passed454501bytes, SHA256
+  16cddac68ceaf240e7b77c11f528b604b7a6189e5da32ec8d3270c7c48cae3ff,
+   normal import/history,2000:2000, restart, category/scopes and14series size limits.
+   Fixture advertised release size4GiB is synthetic metadata; actual bytes above
+   are the transferred/generated content, never a real-provider download claim.
+3. Final paired reconfiguration/readback (final-roots.json in the latter two work
+   directories) verified all scoped Arr roots even without Ombi selected, sizes,
+   inside-container service-UID access, unchanged content and stable reruns.
+4. Radarr/Bazarr minimal pair with secondary host
+   /media/NAS/Installarr-Scoped-Secondary-14a628b2 mapped to
+   /data/media-movies-2: actual root ID6, UID2000 RW access, Bazarr's own remote
+   Radarr6.4.4.10685 lookup, restart and rerun passed. Evidence first final work
+   directory's secondary-result.json. This is the isolated export at two mounts,
+   not proof of independent production NAS export access.
+5. Plex-image diagnostic with actual generated startup guard and RO media binds:
+   all fixture media write attempts denied; download folders unmounted. No PMS or
+   duplicate claimed identity started. Evidence plex-bind-result.json in the same
+   work directory. New combined claimed library creation remains operator-run.
+6. `sudo python3 -u tools/test_physical_scoped_local.py`:
+   /var/tmp/installarr-scoped-local-zxdo3fsz/result.json passed unpublished local-only
+   SAB, OS NVMe ext4 source /dev/nvme0n1p2, restart/rerun/categories/scopes and
+   simulated absent drive refused before creating any data/config directories.
+   Not acceptance of a separately mounted physical spare NVMe or its boot behavior.
+
+Tested image versions/digests remain the manifest pins: Radarr6.4.4.10685-ls324
+(084b3b2ab1d0ef930660727259546a241f2bdf67c9ed085d54bf1486a6887c9b),
+Sonarr4.0.20.3014-ls1
+(48e36b608b461273b9dae857725cd0561a127f2c694b687318f6d0c5ce63e5c9),
+SAB5.1.3-ls278
+(3ac1c9ea03bafa2588dd8acdcb809857bae305e71d2d90e11d689c78076a9c01),
+Bazarr1.6.2-ls370
+(9a625883f054e722795affe5e3ca71057e6ed817ecdf99f4a99624346fcc509c).
+Plex diagnostic used unchanged official pinned1.43.5.11079-b3b13e506 image; no
+new Plex server acceptance is implied by this shell/guard test.
+
+### Regression, packaging, terminal and privacy checks
+
+- Final `python3 -m unittest discover -s tests -v`:242tests,236passed/6skips in9.065s
+  as htpc; root242tests,240passed/2skips in9.039s. Logs
+  /tmp/installarr-standard-user-complete.log and
+  /tmp/installarr-standard-root-complete.log. Initial expanded suite exposed three
+  obsolete guide transcript/expectation tests; adapted to the new explicit storage
+  questions and internal sudo continuation flag. No failing implementation test
+  was suppressed. New tests exercise all511optional scoped-render subsets.
+- Native Docker Compose5.6.1 parsed1022bootstrap/published combinations, all passed:
+  /var/tmp/installarr-scoped-compose-tl78jgxe/result.json.
+- Actual PTY `sudo python3 -u tools/test_guided_terminal_current.py`: all9apps,
+  local-only explicit paths, four libraries, save-only/no provisioning/private-input
+  collection passed; /var/tmp/installarr-guided-preview-i0ookiu8/result.json.
+- Final `sudo python3 -u tools/test_distribution.py`: installed wheels passed242
+  tests/240passed/2skips on both official Ubuntu20.04/Python3.8 and24.04/Python3.12.
+  /var/tmp/installarr-distribution-id12iq8_/{20.04,24.04}/result.json/acceptance.json.
+  Final wheel source digests equal checkout,625pinned documents/license intact,
+  console scripts/imports/atomic runtime passed. Focal wheel623851bytes SHA256
+  84a11f6128c9ea258f9775ed42c4a8a230fd84b6b52d324155ba67b764b02e47;
+  Noble623849bytes SHA256
+  d7123544e3ca088dc5e6f70dbc3cda07c7b41fcb9245395b860a222d396e4d9e.
+  Earlier241-test wheel run at /var/tmp/installarr-distribution-m8nk4426 passed too;
+  final repeat includes subsequent safety/validation changes. Userspace containers
+  have no host socket/NAS/private inputs and do not replace real systemd/boot tests.
+- Python3.8grammar172files, shell syntax and git diff whitespace passed.819
+  reviewable files scanned against current GUI/provider passwords/keys, Plex
+  token/claim and Discord IDs: zero matches. No secret values printed.
+- All disposable app containers/networks stopped/removed. Generated NAS fixtures
+  retained only at the exact test paths above; old supplied examples unchanged.
+  Existing9-app family-media service remains available on original test config.
+  No fixture command running, production mount switch, reboot, commit or push.
+
+## 2026-10-29: fresh bootstrap Newshosting connection-limit refusal
+
+Operator resumed guide and privately supplied Plex claim; bootstrap configuration
+failed at Newshosting before server settings were saved. Checkpoint phase failed,
+bootstrap_auth_and_paths failed; preparation steps remained verified. All9owned
+bootstrap containers stopped by failure handling, with no published deployment.
+
+Host strict TLS verification/greeting to news.newshosting.com:563 passed in0.18s,
+greeting200. Saved credentials used privately: AUTHINFO USER381/PASS502. No raw
+reply, credential, API key or claim printed. Reply classified using fixed booleans:
+connection-limit wording present, incorrect-login/account-restriction wording absent.
+This is an account-limit refusal, not evidence of invalid credentials.
+
+Minimal diagnostic started only the owned unpublished SAB container. Initial
+app_client wait was interrupted because its bundle audit requires all apps running;
+finally stopped SAB. Audited direct SabHTTP transport then tested native API without
+saving settings: accepted false,502present, TLS-error/timeout/invalid-login wording
+absent. SAB stopped afterward; docker ps empty, no diagnostic process remains.
+Operator confirmed another downloader is using subscription and chose to pause it
+themselves before retrying. No production apps inspected/stopped and no credentials
+changed. No full apply rerun by Codex while operator prepares the next GUI run.
+
+Added fixed Newshosting connection-limit guidance for known502connection-limit
+messages on initial/saved tests; arbitrary server messages remain unprinted. Tests
+verify guidance, privacy and generic fallback for other refusals/malformed results.
+Full224-test suite219passed/5skipped in5.936s; log
+/tmp/installarr-provider-limit-regression.log. Changed files pass Python3.8grammar
+and whitespace. No commit/push/reboot. Operator resumes `./installarr.sh` after
+freeing connections; provider success/application startup still await that run.
+
+## 2026-10-29: actual fresh-host NFS preparation and RPC discovery
+
+After shared GUI/provider/family hidden prompts, operator's guide returned generic
+ValueError during preparation. Root-private checkpoints identified accounts and
+prerequisites verified, mount-0 failed before directories/Docker. Saved config had
+production defaults and all9apps; no claim was collected. Operator explicitly
+selected isolated test export for further work. No production export was retried.
+
+Installed nfs-common1:2.6.4-3ubuntu5.1 and rpcbind1.2.6-7ubuntu2; rpcbind service and
+socket active. TCP checks to test NAS192.168.1.102:111unreachable,2049/30000reachable.
+Private-namespace approved-export mount with ordinary NFSv3 discovery exceeded
+30sdeadline; UDP-discovery variant returned32/Connection timed out. Workers reaped,
+no leaked mount. Explicit port2049,mountport30000,mountprotoUDP,mountvers3 mounted
+immediately; exact kernel source/type/options read back, then unmounted with no NAS
+writes. This matches the older exact-source transport evidence; installing another
+Ubuntu package is not the missing step on this host.
+
+Added optional validated nfs_transport to NFSv3 declarations: exact four supported
+endpoint fields, integer port bounds, mount protocol and version checks. Shared
+declarations must agree; explicit endpoints avoid discovery even with no existing
+mount and carry into fstab, retaining hard/TCP data semantics. No arbitrary mount
+options, weakened locking or global NAS-port defaults. Failed mount commands now
+raise fixed HostPrerequisiteError guidance rather than opaque ValueError. Existing
+automatic kernel transport reuse remains limited to the exact matching source.
+
+Full suite `python3 -m unittest discover -s tests -v`:223tests/218passed/5skipped,
+5.923s; /tmp/installarr-nfs-regression.log. New tests cover no-discovery endpoint
+use, persistence, invalid options and contradictory shared mount declarations.
+Changed Python files pass3.8grammar; whitespace check passes.
+
+Saved settings switched to isolated source at /media/Media and /media/NAS, data
+folders Installarr-Clean-Test/Primary and Installarr-Clean-Test/AdditionalMovies.
+Original settings/private failed checkpoints preserved in /var/lib/installarr-setup
+with before-isolated-20261029T175656Z suffix. Separate GUI/provider/family stores
+retained unchanged. Installer apply_reference prepare_only now passed exact mounts,
+fstab persistence, directory/service-UID write checks and signed Docker/standard
+engine setup. Kernel confirms both mounts use only approved isolated export and
+explicit verified endpoints. Application image downloads underway; app containers
+not started. Docker/containerd boot-disabled. No claim, reboot, production access,
+commit or push. Final continuation returned reference_prepared; every step verified,
+all9exact pinned images present and zero containers confirmed. Preparation process
+exited; operator can resume saved setup through `./installarr.sh` without overlap.
+
+## 2026-10-29: fresh-host guided input failure after OpenSubtitles
+
+Operator transcript reproduced against HEAD's original guided.py using in-memory
+execution, mocked mount inventory/account discovery and the exact supplied answers.
+Primary mount prompt accepted `yes`; media containment correction also accepted
+`yes`. Final plan raised `Directories must be absolute, non-root paths without
+parent traversal` immediately after the final provider-selection question. No
+provider request or Discord collection was involved, and setup had not saved its
+settings or started provisioning.
+
+Fixed immediate folder/source validation in both NFS sections and repeated
+containment correction for both media paths. Folder errors explain full paths,
+Enter defaults and why yes/no is inappropriate. Regression replays the reported
+eight-app selection, rejects both yes mount answers and reaches final validated
+configuration with OpenSubtitles.com/family presets preserved. Additional coverage
+checks repeated outside-mount answers, invalid NFS sources, invalid folder forms
+and hidden optional Discord input with blank/retry/no-value-output behavior.
+
+`python3 -m unittest discover -s tests -v`:221tests,216passed/5skipped in5.908s;
+log /tmp/installarr-guided-regression.log. Changed Python files pass Python3.8
+grammar parsing; `git diff --check` passes. Tests mock host discovery/provisioning;
+this is not combined fresh-systemd or boot acceptance. No package/mount/service,
+private credential or NAS changes, reboot, commit or push performed. Operator can
+rerun `./installarr.sh` using isolated test storage settings in
+FRESH_HOST_CODEX_HANDOFF.md; production defaults remain outside test authorization.
+
 ## Current coverage after review
 
 This is a chronological experiment record. Historical blockers remain below as

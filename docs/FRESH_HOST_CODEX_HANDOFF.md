@@ -3,10 +3,33 @@
 Run Codex directly in the SSH terminal. **Do not install or use tmux for this
 workflow.** This is an operator test setup, not a prerequisite for using Installarr.
 
-A clean OS installation removes local Codex history and authentication. Start a new
-Codex chat using the published project checkpoints; this does not restore the full
-erased transcript. `codex resume --last` is for later sessions on the same surviving
-installation, not the first launch after a wipe.
+A clean OS installation that erases the home directory removes local Codex history
+and authentication. Signing in alone does not recover erased history. The operator
+now plans to back up the entire ~/.codex privately OFF this machine before wiping,
+then restore it to /home/htpc/.codex, owned by htpc, with Codex/background server
+stopped. That includes sessions and SQLite state, not just history.jsonl. It can
+contain login credentials; never put the backup in Git. A live file copy of a
+changing database is not a verified backup. Retain a separate off-machine copy.
+
+After restoring, clone the published source to /home/htpc/Installarr and resume:
+
+```sh
+cd ~/Installarr
+codex resume 01a1897b-0699-7b80-ae24-7badc34e2117
+```
+
+Tell Codex: "Ubuntu was reinstalled. Read CURRENT_PROGRESS.md, SAVED_CHECKPOINT.md
+and CURRENT_SETUP.md; old host state is gone. Continue the fresh installer test."
+Restoring conversation history does NOT restore the actual machine state. If no
+usable history survives, start a new chat using the checkpoint prompt below.
+The exact session ID avoids resuming an unrelated newer session with --last.
+
+Current goal (2026-10-30): operator-led Ubuntu24.04.5/OpenSSH clean installation,
+published source clone, no-flag installer launch and complete provisioning/API
+acceptance. Last seven-app settings are documented in CURRENT_SETUP.md. App
+databases, credentials, /var/lib/installarr* state and claimed Plex identity must
+NOT be restored for this test. Fresh input/claim prompts are intentional. No wipe,
+reboot, broad unmount, host networking redesign or media cleanup by Codex.
 
 ## 1. Install Codex as your normal Ubuntu administrator account
 
@@ -57,7 +80,7 @@ If already cloned, use the existing checkout instead of cloning again.
 ## 4. Start Codex directly with fresh-machine context
 
 ```sh
-codex --dangerously-bypass-approvals-and-sandbox -C "$HOME/Installarr" "Read AGENTS.md, README.md, docs/FRESH_HOST_CODEX_HANDOFF.md, docs/CURRENT_PROGRESS.md, docs/SAVED_CHECKPOINT.md and docs/INTERACTIVE_TEST_QUEUE.md. This machine has been wiped and Ubuntu freshly installed. Treat previous local files, credentials, containers and services as gone. Continue the fresh Installarr installation and boot acceptance test. Let Installarr perform provisioning instead of manually preinstalling Docker or NFS. Use only the isolated NAS test export 192.168.1.102:/share/MD0_DATA/Public/installarr; do not access production shares. Prompt for credentials when needed. Ask before rebooting. Run directly in this terminal; do not use tmux."
+codex --dangerously-bypass-approvals-and-sandbox -C "$HOME/Installarr" "Read AGENTS.md, README.md, docs/FRESH_HOST_CODEX_HANDOFF.md, docs/CURRENT_PROGRESS.md, docs/SAVED_CHECKPOINT.md and docs/INTERACTIVE_TEST_QUEUE.md. This machine has been wiped and Ubuntu freshly installed. Treat previous local files, credentials, containers and services as gone. Continue the fresh Installarr installation and boot acceptance test. Let Installarr perform provisioning instead of manually preinstalling Docker or NFS. Read CURRENT_SETUP.md for the last approved storage map and the separate isolated-export recipe here. Use only operator-selected sources and folders; do not silently substitute or inspect sibling shares. Prompt for credentials when needed. Ask before rebooting. Run directly in this terminal; do not use tmux."
 ```
 
 Later, after a saved CLI session exists on this installation:
@@ -67,7 +90,8 @@ codex resume --last --dangerously-bypass-approvals-and-sandbox -C "$HOME/Install
 ```
 
 After a disconnect/reboot, inspect the actual host before repeating actions. After
-another full wipe, start a new chat with the checkpoint-reading command again.
+another full wipe, restore backed-up history if available; otherwise start a new
+chat with the checkpoint-reading command again.
 
 ## 5. Run the fresh installer
 
@@ -83,26 +107,49 @@ provisioning. The normal installer has no Codex dependency and needs no flags.
 Credentials and optional family Discord IDs are prompted on each clean installation;
 no credential exports, encrypted bundles, old app databases or files to transfer.
 
-## Isolated full-install test storage
+## Alternative isolated full-install test storage
 
-The wizard offers production NFS defaults. Override them for this test:
+CURRENT_SETUP.md records the last operator-selected real layout. If the operator
+chooses an isolated test instead, override the wizard defaults with this recipe:
 
 | Prompt | Test answer |
 | --- | --- |
-| Folder for media and downloads | /media/Media/Installarr-Clean-Test/Primary |
-| First NAS already connected? | no |
-| First NAS address/shared folder | 192.168.1.102:/share/MD0_DATA/Public/installarr |
-| First NAS mount folder | /media/Media |
-| Use additional movie folder? | yes |
-| Additional movie folder | /media/NAS/Installarr-Clean-Test/AdditionalMovies |
-| Second NAS already connected? | no |
-| Second NAS address/shared folder | 192.168.1.102:/share/MD0_DATA/Public/installarr |
-| Second NAS mount folder | /media/NAS |
+| Storage for primary media | nas |
+| Folder for primary media | /media/Media/Installarr-Clean-Test/Primary |
+| NAS address/shared folder for primary media | 192.168.1.102:/share/MD0_DATA/Public/installarr |
+| Connect this NAS at this folder | /media/Media |
+| Does this NAS need specific NFS connection ports? | yes; mount protocol udp, NFS2049, mount-service30000 |
+| Finished/unfinished downloads folders | Accept proposed children under the test primary root |
+| Use different storage for downloads? | no |
+| Eight media folders | Accept standardized children under the test primary root |
+| Also use additional movie storage? | yes |
+| Storage for additional movies | nas |
+| Folder for additional movies | /media/NAS/Installarr-Clean-Test/AdditionalMovies |
+| NAS address/shared folder for additional movies | 192.168.1.102:/share/MD0_DATA/Public/installarr |
+| Connect this NAS at this folder | /media/NAS |
+| Does this NAS need specific NFS connection ports? | yes; udp,2049,30000 as above |
+| Storage for network boot assets | local |
+| Folder for network boot assets | /var/lib/installarr-test-assets |
+| Is this folder on a separate mounted drive? | no (explicit OS-disk test assets) |
 
 This uses the same approved isolated export at two local mounts with separate data
 folders. The previous host used /media/installarr; that mount is not assumed to exist
 on the new host. Verify actual source/target before writes. Production defaults
 remain available for a separately authorized real deployment.
+
+The current guide has explicit endpoint prompts; no manual JSON edit is required.
+The 2026-10-29 fresh-host run confirmed that this NAS's RPC discovery port111
+does not respond, although NFS2049 and mount-service30000 are reachable. Both
+nfs-common and rpcbind were installed and local rpcbind was active. The isolated
+export mounted immediately with explicit NFSv3 transport settings. A saved setup
+can declare `nfs_transport` on each matching `kind: nfs` storage mount:
+`{"port":2049,"mountport":30000,"mountproto":"udp","mountvers":3}`.
+These are verified settings for this test NAS, not defaults to guess for other
+servers. The installer retains TCP/hard NFS data semantics and persists these
+endpoints. The guide uses ordinary RPC discovery unless explicit transport settings
+are selected through those prompts or supplied in configuration. Preserve private input
+stores and archive immutable operation checkpoints before changing an attempted
+setup's storage map; never edit a checkpoint fingerprint to force reuse.
 
 ## Checkpoint interpretation after a wipe
 

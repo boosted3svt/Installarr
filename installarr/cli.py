@@ -79,7 +79,7 @@ def preflight():
 def validate(config):
     if not isinstance(config, dict) or config.get("schema_version") != 1:
         raise ValueError("Expected a version 1 configuration object")
-    allowed = {"schema_version", "apps", "timezone", "bind_address", "plex_allowed_networks", "service_user", "storage", "project_directory", "storage_checks", "storage_mounts", "data_root", "quality_profiles", "plex_claim_file", "plex_libraries", "plex_server_name", "hostname", "ombi_family_presets", "ombi_family_preferences_file", "providers", "provider_secrets_file", "bazarr_language_profile", "secondary_media_read_only"}
+    allowed = {"schema_version", "apps", "timezone", "bind_address", "plex_allowed_networks", "service_user", "storage", "project_directory", "storage_checks", "storage_mounts", "data_root", "quality_profiles", "plex_claim_file", "plex_libraries", "plex_server_name", "hostname", "ombi_family_presets", "ombi_family_preferences_file", "providers", "provider_secrets_file", "bazarr_language_profile", "secondary_media_read_only", "folder_map"}
     if set(config) - allowed:
         raise ValueError("Unknown configuration fields; do not store credentials in this file")
     apps = config.get("apps")
@@ -105,7 +105,8 @@ def validate(config):
                 or value == '/' or '..' in Path(value).parts or any(ord(c) < 32 for c in value)):
             raise ValueError('Plex claim file requires an absolute private path and selected Plex')
     from .plex import validate_libraries
-    validate_libraries(config)
+    if 'folder_map' not in config:
+        validate_libraries(config)
     if 'hostname' in config and (not isinstance(config['hostname'], str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9.-]{0,252}', config['hostname'])):
         raise ValueError('Invalid server hostname')
     if 'plex_server_name' in config:
@@ -143,7 +144,11 @@ def validate(config):
         if any(secondary == Path(path) or secondary in Path(path).parents or Path(path) in secondary.parents
                for purpose, path in storage.items() if purpose != 'media_secondary'):
             raise ValueError('Secondary media must not overlap other storage purposes')
-    if 'data_root' in config:
+    from .layout import validate_layout
+    validate_layout(config)
+    if 'folder_map' in config:
+        validate_libraries(config)
+    if 'data_root' in config and 'folder_map' not in config:
         root = Path(config['data_root']) if isinstance(config['data_root'], str) else None
         if root is None or not root.is_absolute() or str(root) == '/' or '..' in root.parts or any(ord(c) < 32 for c in str(root)):
             raise ValueError('Shared data root must be an absolute non-root directory')
@@ -331,7 +336,8 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="action")
     sub.add_parser("family-accounts", help="Save optional family Discord account numbers privately")
-    sub.add_parser("setup", help="Guided setup and resume (default when no command is supplied)")
+    setup = sub.add_parser("setup", help="Guided setup and resume (default when no command is supplied)")
+    setup.add_argument('--continue-as-admin', action='store_true', help=argparse.SUPPRESS)
     sub.add_parser("preflight", help="Read-only host inventory")
     menu = sub.add_parser('menu', help='Interactive terminal navigation over configuration and deployment commands')
     menu.add_argument('--config', type=Path, default=Path('installarr.json'))
@@ -406,7 +412,7 @@ def main(argv=None):
             return 0
         if args.action == "setup":
             from .guided import run_setup
-            return run_setup()
+            return run_setup(continue_as_admin=True) if getattr(args, 'continue_as_admin', False) else run_setup()
         if args.action == 'menu':
             from .menu import run_menu
             return run_menu(args.config, args.name, args.state_directory, main)

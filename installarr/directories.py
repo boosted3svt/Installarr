@@ -87,7 +87,18 @@ def directory_plan(config):
         entries.append({'path': str(Path(config['storage']['configs']) / 'plex/Library/Application Support/Plex Media Server/Logs'),
                         'local': True, 'check': None, 'sentinel': None,
                         'uid': identity['uid'], 'gid': identity['gid'], 'application_config': True})
-    if 'plex' in config['apps']:
+    if 'folder_map' in config:
+        from .layout import entries as layout_entries
+        for row in layout_entries(config):
+            if any(entry['path'] == row['host'] for entry in entries):
+                continue
+            base = next(entry for entry in entries if entry['path'] == config['storage'][row['purpose']])
+            entries.append({**base, 'path': row['host']})
+    if 'sabnzbd' in config['apps'] or set(config['apps']) & {'radarr', 'sonarr'}:
+        base = next(row for row in entries if row['path'] == config['storage']['downloads'])
+        for category in ('movies', 'tv'):
+            entries.append({**base, 'path': str(Path(base['path']) / category), 'sentinel': None})
+    if 'plex' in config['apps'] and 'folder_map' not in config:
         from .plex import library_paths
         base = next(row for row in entries if row['path'] == config['storage']['media'])
         for item in library_paths(config):
@@ -96,11 +107,11 @@ def directory_plan(config):
                     continue
                 if not any(row['path'] == path for row in entries):
                     entries.append({**base, 'path': path, 'sentinel': None})
-    for app, leaf in (('sonarr', 'TV'), ('radarr', 'Movies')):
+    for app, leaf in (() if 'folder_map' in config else (('sonarr', 'TV'), ('radarr', 'Movies'))):
         if app in config['apps']:
             base = next(row for row in entries if row['path'] == config['storage']['media'])
             entries.append({**base, 'path': str(Path(base['path']) / leaf), 'sentinel': None})
-    if config.get('ombi_family_presets'):
+    if config.get('ombi_family_presets') and 'folder_map' not in config:
         from .ombi_family import family_paths
         base = next(row for row in entries if row['path'] == config['storage']['media'])
         for routes in family_paths(config).values():

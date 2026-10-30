@@ -1,5 +1,36 @@
 # Fresh headless installation runbook
 
+## Standardized storage guide — latest implementation
+
+Run `./installarr.sh` without flags. New setups explicitly choose local/NVMe,
+NAS/NFS or existing mounted storage, each media/download folder and optional
+separate download storage. The approved layout and exact production defaults are
+in PROPOSED_PRODUCTION_STORAGE_CHANGELOG.md (now marked implemented). New Plex
+libraries: Movies, TV Shows, Sports, Standup; Music excluded without deleting files.
+SAB uses unfinished-downloads/finished-downloads and prepared movies/tv categories.
+Strict per-app binds use common `/data/<role>` names and can require copy imports.
+
+When the old saved setup is found, choose no to continuing it, then yes to a fresh
+installation. Review and save the complete source/mount/folder/access map. Saving
+alone does not stop services. On Start installation confirmation, the prior owned
+deployment is stopped/disabled, its settings/DBs preserved, and only conflicting
+managed mounts/fstab entries replaced. New setup selection is saved privately in
+/var/lib/installarr-setup/active-setup.json; actual config/state are under its
+selected /var/lib/installarr-setup/installations/setup-* directory. GUI/provider/
+family inputs are reused privately. The new Plex database requires its own claim.
+
+If a switch fails, resume the same saved setup. Do not delete checkpoints or force
+mount over unrelated files. Before-switch fstab and verified prior unit/definition
+backups are in the new private setup directory. Prior app databases stay at their
+original paths; any retired local netboot assets child is preserved unchanged under
+retired-local-assets. Restoring the prior setup requires stopping the new owned
+deployment, checking current mounts, restoring reviewed persistence/asset paths and
+starting only its prior unit; do not start both on the same ports. No automatic
+database migration, media movement or reboot is performed.
+
+The advanced/historical layout examples below describe saved legacy configs and
+do not supersede these new guided defaults.
+
 For the current physical test server, resume the exact configurations/state in
 CURRENT_PROGRESS.md. This runbook describes a new approved Ubuntu target and a
 new deployment name/state directory. The project remains a tested partial installer;
