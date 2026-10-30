@@ -1,11 +1,12 @@
 # Requirements and acceptance boundaries — 2026-10-29
 
-Latest2026-10-30: CURRENT_PROGRESS.md and CURRENT_SETUP.md supersede historical
-pending-input/live-unit statements in this matrix. Full standardized profiles/
-quality sizes, native family notification preferences and a seven-app operator
-ready/enabled run now pass. Current244host suites pass; publication and an
-operator-led Ubuntu24.04.5 reinstall/full fresh guide/boot test are the next work.
-Do not add repeated ordinary application-user actions as acceptance gates.
+Latest2026-10-30: the operator completed a genuinely fresh Ubuntu24.04.5 seven-app
+installation at192.168.1.51/23, including real bootstrap/publication/automatic-start
+checks. Opt-in scoped media repair and subsequent actual movie discovery passed.
+CURRENT_PROGRESS.md, CURRENT_SETUP.md and IMPLEMENTATION_CHECKLIST.md supersede
+historical pending-input/live-unit entries below. Current remaining release work
+is coordinated reboot/storage-failure acceptance and permission-policy hardening,
+not another reinstall or repeated ordinary application-user actions.
 
 This matrix maps the operator handoff to actual evidence. “Passed” has the stated
 scope; it never means all environments or a complete release. Current commands,

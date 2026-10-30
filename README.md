@@ -3,10 +3,11 @@
 A guided installer for a fresh Ubuntu media server. Start with Ubuntu, OpenSSH
 and an account that can use `sudo`; Installarr guides you through the rest.
 
-**Status:** the earlier combined nine-app deployment passes. The standardized
-storage layout passes physical Radarr/SAB and Sonarr/SAB download/import tests,
-local-NVMe SAB tests and Plex read-only bind checks. Its full production run and
-reboot acceptance remain pending.
+**Status:** a fresh Ubuntu24.04.5 installation of the seven selected media apps
+passes, including a different host network and operator-confirmed Plex media
+discovery after supervised permission repair. All nine optional adapters have
+earlier scoped tests. Coordinated reboot and unavailable-storage acceptance
+remain outstanding; see the current checkpoint for evidence and limits.
 
 ## Start here
 
@@ -128,12 +129,19 @@ The installer verifies actual category directories and access inside containers
 before declaring success. TRaSH quality-size limits are configured separately
 from the full pinned profiles and custom-format scores.
 
+An optional [supervised media-access policy](docs/MEDIA_PERMISSIONS.md) can repair
+restrictive permissions on manually added Plex media. It starts after healthy
+container startup and repeats60seconds after each completed pass, using bounded
+batches. It preserves file-owner UIDs, may change the owning group/read permissions,
+and leaves Plex non-root with read-only media binds. Existing content permissions
+are otherwise preserved; storage-server refusals and skipped items remain explicit.
+
 The dated or `Installarr-*` folders from development experiments are not created
 by normal installation. The developer scripts under `tools/` are separate tests.
 
 Current evidence includes a real nine-app deployment, authenticated HTTP checks,
 API integrations, complete pinned profiles and family-preference readback. The
-244-test suite passes on the host and from installed wheels in Ubuntu20.04 and
+254-test suite passes on the host and from installed wheels in Ubuntu20.04 and
 24.04 userspaces.
 Those userspace tests do not replace the pending full clean-host/boot test.
 Ubuntu20.04 compatibility uses a pinned archived amd64 Docker package set; details

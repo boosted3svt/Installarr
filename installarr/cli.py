@@ -79,12 +79,14 @@ def preflight():
 def validate(config):
     if not isinstance(config, dict) or config.get("schema_version") != 1:
         raise ValueError("Expected a version 1 configuration object")
-    allowed = {"schema_version", "apps", "timezone", "bind_address", "plex_allowed_networks", "service_user", "storage", "project_directory", "storage_checks", "storage_mounts", "data_root", "quality_profiles", "plex_claim_file", "plex_libraries", "plex_server_name", "hostname", "ombi_family_presets", "ombi_family_preferences_file", "providers", "provider_secrets_file", "bazarr_language_profile", "secondary_media_read_only", "folder_map"}
+    allowed = {"schema_version", "apps", "timezone", "bind_address", "plex_allowed_networks", "service_user", "storage", "project_directory", "storage_checks", "storage_mounts", "data_root", "quality_profiles", "plex_claim_file", "plex_libraries", "plex_server_name", "hostname", "ombi_family_presets", "ombi_family_preferences_file", "providers", "provider_secrets_file", "bazarr_language_profile", "secondary_media_read_only", "folder_map", "media_permission_repair"}
     if set(config) - allowed:
         raise ValueError("Unknown configuration fields; do not store credentials in this file")
     apps = config.get("apps")
     if not isinstance(apps, list) or not apps or any(a not in APPS for a in apps) or len(set(apps)) != len(apps):
         raise ValueError("Choose a nonempty, unique list of supported apps")
+    if 'media_permission_repair' in config and (type(config['media_permission_repair']) is not bool or 'plex' not in apps):
+        raise ValueError('Media permission repair requires selected Plex and an explicit boolean')
     from .profiles import validate_selections
     validate_selections(config)
     from .ombi_family import validate_family_config
@@ -359,6 +361,11 @@ def main(argv=None):
     service.add_argument("--name", required=True)
     status = sub.add_parser("service-status", help="Read private managed-service state")
     status.add_argument("--name", required=True)
+    permissions = sub.add_parser('media-permissions', help='Opt in to supervised Plex media read-access repair')
+    permissions.add_argument('--name', required=True)
+    permissions_mode = permissions.add_mutually_exclusive_group()
+    permissions_mode.add_argument('--enable', action='store_true')
+    permissions_mode.add_argument('--disable', action='store_true')
     for runtime_action in ('audit-runtime', 'refresh-runtime'):
         runtime_parser = sub.add_parser(runtime_action, help='Inspect or explicitly refresh stopped reference supervisors')
         runtime_parser.add_argument('--name', required=True)
@@ -400,6 +407,11 @@ def main(argv=None):
     if args.action is None:
         args.action = "setup"
     try:
+        if args.action == 'media-permissions':
+            from .media_permissions import set_policy
+            enabled = True if args.enable else False if args.disable else None
+            print(json.dumps(set_policy(args.name, enabled), indent=2))
+            return 0
         if args.action == "family-accounts":
             if os.geteuid() != 0 or not sys.stdin.isatty():
                 raise HostPrerequisiteError('Run sudo ./installarr.sh family-accounts in your terminal.')

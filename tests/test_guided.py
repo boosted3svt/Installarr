@@ -102,7 +102,7 @@ class GuidedTests(unittest.TestCase):
                    + ['', '', ''] + [''] * 8  # downloads, same storage, eight media roles
                    + ['', '', 'HTPC-Installarr']
                    + ['', '', '', '', 'yes', '', '']  # extra movies: accept defaults, reject yes mount
-                   + ['', '', '', '', ''])  # family and providers
+                   + ['', '', '', '', '', 'no'])  # family, providers and optional media repair
         inventory = {'status': 'observed', 'filesystems': [
             {'target': '/', 'source': '/dev/test', 'fstype': 'ext4'}]}
         with patch('builtins.input', side_effect=answers) as prompts, patch('installarr.storage.mount_inventory', return_value=inventory), patch('installarr.cli.identity_conflicts', return_value=[]), patch('installarr.guided.media_identity', return_value={'name': 'media', 'uid': 2000, 'gid': 2000}), patch('sys.stdout', new_callable=io.StringIO):

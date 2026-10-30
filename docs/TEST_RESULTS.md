@@ -1,5 +1,86 @@
 # Physical test results
 
+## 2026-10-30: fresh24.04.5 and approved supervised media repair
+
+Operator reinstalled Ubuntu24.04.5, restored Codex history and ran the published
+guide to completion with seven selected apps at192.168.1.51/23 (deliberately a
+different network from old10.70.0.99). New user plex, checkout /home/plex/Installarr,
+hostname plex, Plex HTPC-210; current config/apps/state /var/lib/installarr-setup.
+Saved reference_poc_ready, all bootstrap/published/preparation steps and automatic
+startup verified; live family-media active/enabled, bootstrap inactive/disabled.
+Actual Docker bindings use the new address. Exact .103 Public at/media/Media and
+.102 Public at/media/Media-2 NFS sources observed. No old databases restored.
+
+Root-shell media listings were insufficient: movie subfolders root:root750 denied
+real UID/GID2000:2000 reads while flat TV/permissive Sports remained visible.
+Operator explicitly approved a NEW opt-in recurring permission policy in existing
+host supervision, superseding preserve-all-metadata only within selected Plex
+library roots. Added module, CLI sidecar controls, guided default-no boolean opt-in
+and new-live-service policy seeding. No new service/backend/NAS API/ACL dependency.
+Owner UID/content/mtime preserved; shared group/read/search may change. Plex stays
+non-root, read-only media binds. Skip symlinks/hardlinks/special objects/nested
+mounts/NAS metadata/explicit read-only secondary. Verify mount/marker/held identity,
+bound batches/deadlines and refuse replacement workers while an old group remains.
+
+Schedule: first pass after healthy storage and owned containers running; repeat
+60s AFTER completion.1000entry/5s active batches,30s outer deadline; large walks
+continue at later2s supervisor iterations without overlapping passes. Repair is
+asynchronous relative to ongoing health checks. No automatic Plex scan scheduling.
+
+Physical evidence (all disposable NAS fixtures removed exactly):
+- /var/tmp/installarr-media-repair-hnhflpd9/result.json: direct real NFS repair,
+  actual dropped2000:2000 read, unchanged bytes/mtime/owner UID, rerun changed0.
+- /var/tmp/installarr-media-worker-rjk1uw6z/result.json: real asynchronous tracked
+  worker repaired2entries, no denials, completed without blocking the supervisor.
+- Explicit stopped-runtime refresh retained original bytes at
+  /var/lib/installarr-setup/state/runtime-backup-e2f0f365d78e27ff.json, enabled the
+  private family-media policy and restarted ONLY its live stack. Bootstrap stays off.
+- First live pass checked22/changed7/denied0/skipped14. Actual service-UID reads of
+  Astro Boy, CODA and6Underground files passed without printing file contents.
+- /var/tmp/installarr-media-repeat-lidace8y/result.json: late restrictive fixture
+  repaired24.04s after addition,62.41s between completed passes; owner UID preserved.
+  Following full pass changed0. Operator then confirmed all three movies appeared
+  in Plex WITHOUT another container restart. This is actual discovery evidence.
+
+New tests cover root-owned750 repair, actual service reads, preservation/idempotence,
+wrong source/missing marker refusal before mutation, exclusions, denied metadata
+changes, bounded traversal/cursor safety, startup/60s scheduling/no-overlap,
+disable and unhealthy-storage cancellation. Existing WorkerSlot tests exercise
+timeouts/durable unreaped-group refusal. Final254host tests pass: plex245/9skips,
+root252/2skips, /tmp/installarr-media-permissions-{user,root}.log.
+Real all-nine local-only guided PTY save-only opted into repair without host work:
+/var/tmp/installarr-guided-preview-_fd2oywi/result.json. Fixture answer alignment
+initially declined save; corrected, and added a root-only guard so PTY fixture
+cannot elevate into the real default installation. No real setup was applied by it.
+
+Initial distribution attempt found absent ubuntu:20.04 on the reinstalled host;
+official20.04/24.04 images pulled for isolated userspace tests. Initial Focal
+254-test wheel at/var/tmp/installarr-distribution-udy04fuv exposed2failures in the
+effective-ID access check (root real UID plus older libc/Python flag emulation).
+Fixed verifier to use permanently dropped REAL UID/GID with no supplementary
+groups in a short-lived child within the bounded worker group. No privileged
+identity changes in the supervisor itself. Final installed-wheel suites BOTH pass
+254tests/252passed/2skips at/var/tmp/installarr-distribution-98jjoqcm:
+Focal wheel630235bytes SHA2565479ebb77a9faf86200c8a0074b842f0ccd1843d4ca536c6d33330f769b00843;
+Noble wheel630232bytes SHA256c4bfeb2a045c2ffde42555c6d17a1708f2850265c8c0b5adb10dac12e7f38170.
+No host socket/NAS/credentials mounted into these userspace containers.
+Python3.8grammar174files, shell syntax and whitespace passed.
+
+Live activated snapshot6e089fbf65ed0b2f5ca3b1ea02ea4b7a9c0c28472b6fdc6e3afed87560c06f20
+remains integrity-verified/working on current24.04; no further app restart after
+operator discovery confirmation. The later Focal portability correction is in
+the published source; an existing immutable runtime loads it only through an
+explicit stopped refresh. Code/config/images/DBs aren't silently migrated.
+
+Operator requests publishing this policy for fresh clones and a remaining-work
+estimate. Checklist now estimates ABOUT90% overall for agreed scope, explicitly
+subjective. Remaining: publication/fresh-clone verification, coordinated actual
+reboot/reconnect and unavailable-storage protection, new-policy large/changing-tree/
+interruption hardening and final release audit. Do not count another reinstall,
+all-nine selection or ordinary media-user actions as mandatory release gates.
+No reboot/NAS outage/network changes/media migration performed; permission metadata
+changes are confined to the explicitly approved selected Plex roots.
+
 ## 2026-10-30: publication completed and fresh public clone verified
 
 Published implementation e1fed73169336eb335475ae2af3937e99495d3ef to public main

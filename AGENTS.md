@@ -619,3 +619,49 @@ Publication complete: implementation e1fed73169336eb335475ae2af3937e99495d3ef
 on public main, exact reviewed tree verified; fresh public clone launcher and
 244tests pass. Docs-only follow-up records the completed savepoint. Clone main
 after reinstall; no private files/reference Compose or app DBs published.
+
+
+## Fresh host and approved permission supervision — 2026-10-30 (latest)
+
+Operator reinstalled Ubuntu24.04.5 and completed fresh seven-app setup at
+192.168.1.51/23, user plex, checkout /home/plex/Installarr, Plex HTPC-210. Live
+installarr-family-media.service active/enabled; new settings/apps/state under
+/var/lib/installarr-setup; bootstrap inactive/disabled. Current exact sources
+.103 Public→/media/Media and .102 Public→/media/Media-2. Old /home/htpc/fixture
+paths/units are historical after the wipe. No networking changes/reboot by Codex.
+
+Operator confirmed copied movie subfolders root:root750 blocked UID2000 and
+explicitly APPROVED a new opt-in recurring permission-repair policy in the existing
+host supervisor. This supersedes preserve-all-content-metadata restrictions ONLY
+inside configured Plex media roots. File-owner UIDs remain unchanged; grant shared
+service GID/read/search when needed. No recursive whole-share chown,777,root Plex,
+NAS API/ACL dependency or extra backend. Skip symlinks/hardlinks/nested mounts/
+NAS metadata/explicit read-only secondary; check mount/marker before repair.
+
+Feature is enabled locally after an explicit stopped-runtime refresh with private
+backup; first pass after healthy/running containers, repeat60s AFTER completion,
+2s supervisor polling overhead;1000entry/5s batches with30s worker deadline and
+unreaped-worker refusal. Real NAS and asynchronous worker tests passed; first live
+pass repaired7entries, no denials. Actual3movie reads as2000:2000 passed. A late
+restricted fixture was repaired on the next pass62.41s after the previous completed
+pass; fixture cleaned up. Later pass changed0. Read MEDIA_PERMISSIONS.md and
+CURRENT_PROGRESS.md. Code/docs local, no commit/push yet for this new feature.
+
+
+## Permission feature publication and completion scope — latest
+
+Operator confirms CODA/Astro Boy/6Underground appeared in Plex after the repair
+without any additional container restart, and explicitly requests publishing this
+feature for fresh clones plus a completion estimate. Full254host and20.04/24.04
+installed-wheel suites pass after fixing older-libc effective-ID checks with a
+short-lived real-UID verifier.826reviewable files checked against current private
+values: zero matches. No credentials/policy/DBs/Codex history in Git. Fresh guide
+must explicitly opt in; default no. Later source portability fix is not silently
+loaded into the already-running immutable supervisor; no additional restart.
+
+Estimate about90% overall for agreed fresh-install scope, not measured coverage
+or release-ready. Remaining work: publish/verify clone, coordinated actual reboot
+and unavailable-storage acceptance, new-policy large/changing-tree/interruption
+hardening and final release audit. Selected clean seven-app install is COMPLETE;
+do not require another reinstall, all-nine selection or more ordinary app-user
+actions. See rewritten IMPLEMENTATION_CHECKLIST.md and INTERACTIVE_TEST_QUEUE.md.

@@ -1,6 +1,7 @@
-# Last selected setup — nonsecret reference, 2026-10-30
+# Current selected setup — nonsecret reference, 2026-10-30
 
 This records the operator's current choices for the next fresh Ubuntu24.04.5 test.
+Updated after the operator completed the fresh Ubuntu24.04.5 installation.
 It is documentation, not a deployable config or a credential backup. The guide
 generates new private settings, identities/checkpoints and application databases.
 Never restore old /var/lib/installarr* state into the clean acceptance test.
@@ -9,7 +10,7 @@ Never restore old /var/lib/installarr* state into the clean acceptance test.
 
 Plex, Radarr, Sonarr, SABnzbd, Bazarr, Ombi and Tautulli selected. Jackett and
 netboot.xyz declined in the last run; every app remains optional in the guide.
-Plex server name HomeNet-Test2; address10.70.0.99 (detect/confirm after reinstall);
+Plex server name HTPC-210; address192.168.1.51/23, hostname plex;
 timezone America/Chicago. Media service identity media2000:2000 is installer-managed.
 The clean host must collect its shared administrator login locally; Plex uses its
 own authorization. The original reference Compose is unnecessary.
@@ -21,7 +22,7 @@ own authorization. The original reference Compose is unnecessary.
 | Primary | 192.168.1.103:/share/MD0_DATA/Public | /media/Media |
 | Secondary movies | 192.168.1.102:/share/MD0_DATA/Public | Mount /media/Media-2; child media-movies-2 |
 
-Both sources were verified mounted on the last host. No explicit NFS endpoint
+Both sources were verified mounted on the reinstalled current host. No explicit NFS endpoint
 overrides were selected. Do not substitute the isolated export or infer that any
 mount survived reinstall. If the operator chooses an isolated test instead, use
 the separate recipe in FRESH_HOST_CODEX_HANDOFF.md, with its exact transport values.
@@ -63,13 +64,20 @@ NAS chown or media migration. New standardized folders were intentionally empty.
   Notification sending stays disabled. Numbers/credentials are not in this file;
   collect locally again on the clean machine, never in chat.
 
-## Last host deployment and shutdown reference
+## Current deployment and shutdown reference
 
-Selected setup /var/lib/installarr-setup/installations/setup-c2c7141a879e;
+Current setup /var/lib/installarr-setup (first installation, no selection pointer),
 live Compose project/compose.json, app configs apps/, state state/state.json.
-Unit installarr-family-c2c7141a879e.service active/enabled, bootstrap stopped.
-Both family-9ad2bb7ce113 and family-media retired/stopped. These names are historical
-after the wipe; derive names from the new active-setup.json and installation.json.
+Unit installarr-family-media.service active/enabled, bootstrap stopped/disabled.
+Checkout /home/plex/Installarr, Ubuntu user plex. Earlier setup-c2c7141a879e and
+family-9ad2bb7ce113 belonged to the erased OS; do not restore or start those paths.
+
+Operator-approved permission repair is now ENABLED in the private service policy
+/var/lib/installarr-services/family-media/media-permissions.json. It starts after
+healthy container startup and repeats60s after each completed pass, in bounded
+batches. File-owner UIDs preserved; inaccessible media may receive shared group
+and group/owner read/search permissions. Plex stays2000:2000/read-only. No config
+fingerprint/Compose or app credential changes. MEDIA_PERMISSIONS.md gives controls.
 
 If manually removing a surviving deployment, stop/disable its live and bootstrap
 systemd supervisors BEFORE Compose down, otherwise supervision can recreate apps.

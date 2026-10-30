@@ -113,6 +113,8 @@ def summary(config):
         print('  Movies: prefer 1080p; 4K is available for manual upgrades.')
     if 'bazarr' in config['apps']:
         print('  Subtitles: standard English; OpenSubtitles.com when selected.')
+    if config.get('media_permission_repair'):
+        print('  Media access: repair Plex read access after startup and every 60 seconds; file owners are preserved.')
     if 'folder_map' in config:
         from .layout import app_entries
         from .hostplan import storage_assertions
@@ -260,6 +262,8 @@ def collect_settings(base):
             providers['bazarr'] = {'enabled': ['opensubtitlescom']}
     if providers:
         config.update(providers=providers, provider_secrets_file=str(base / 'providers' / 'providers.json'))
+    if 'plex' in selected and yes('Automatically repair access to manually added media? This may change group and read permissions in your Plex folders.', False):
+        config['media_permission_repair'] = True
     reviewed = plan(config)
     if reviewed['conflicts']:
         print('Setup found an account conflict:')

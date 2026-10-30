@@ -11,6 +11,8 @@ import time
 
 
 def main():
+    if os.geteuid() != 0:
+        raise SystemExit('Run this isolated PTY fixture as root so setup cannot elevate into the real default installation.')
     work=Path(tempfile.mkdtemp(prefix='installarr-guided-preview-',dir='/var/tmp'))
     base=work/'setup'
     master,slave=pty.openpty()
@@ -22,7 +24,7 @@ def main():
              + ['']*8 + ['', '', '']
              + ['yes', 'local', str(work/'secondary'), '']
              + ['local', str(work/'netboot-assets'), '']
-             + ['', '', '', '', '', '', 'no'])
+             + ['', '', '', '', '', 'yes', '', 'no'])
     os.write(master, ('\n'.join(answers)+'\n').encode())
     output=bytearray();deadline=time.monotonic()+30
     try:
@@ -43,6 +45,7 @@ def main():
     config=json.loads((base/'settings.json').read_text())
     assert len(config['apps'])==9 and not(base/'state').exists() and not(base/'login').exists()
     assert config['providers']['bazarr']['enabled']==['opensubtitlescom']
+    assert config['media_permission_repair'] is True
     assert all(row['kind']=='local' for row in config['storage_mounts'].values())
     assert config['folder_map']['movies']==str(work/'media/media-movies')
     assert [r['name'] for r in config['plex_libraries']]==['Movies','TV Shows','Sports','Standup']

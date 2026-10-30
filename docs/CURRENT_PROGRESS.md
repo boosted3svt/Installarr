@@ -1,121 +1,111 @@
-# Current Installarr checkpoint
+# Current Installarr checkpoint — 2026-10-30
 
-## Resume here — 2026-10-30
+## Current host, after the completed reinstall
 
-The operator requested publishing ALL current implementation/tests/documentation
-before an operator-led Ubuntu24.04.5 reinstall and a full fresh-install test.
-They will back up the Codex conversation separately, then restore it after the
-reinstall. Publication is complete; the work now is preparation for that clean test;
-no machine wipe, reboot, service shutdown or media cleanup is authorized for Codex.
+Operator reinstalled Ubuntu24.04.5, restored this Codex conversation and completed
+./installarr.sh from published source with seven apps. Host/user/checkout are now
+192.168.1.51/23, plex, /home/plex/Installarr; hostname plex; Plex name HTPC-210.
+The address was deliberately changed from the old10.70.0.99 network to test fresh
+address handling. Saved config, Docker bindings and completed published checks
+use192.168.1.51. No IP/DNS/routes/VLAN/SSH changes made by Codex.
 
-Read this file, SAVED_CHECKPOINT.md, CURRENT_SETUP.md and FRESH_HOST_CODEX_HANDOFF.md
-before acting. TEST_RESULTS.md preserves chronological evidence and failures.
-Older AGENTS.md/live-stack statements are superseded by this checkpoint. Inspect
-actual host state after reconnecting: conversation history does not restore a host.
+- Current owned unit installarr-family-media.service active/enabled; seven apps
+  Plex/Radarr/Sonarr/SABnzbd/Bazarr/Ombi/Tautulli running. Bootstrap inactive/disabled.
+- New settings /var/lib/installarr-setup/settings.json; app DBs apps/; state
+  state/state.json; live Compose project/compose.json; bootstrap state/bootstrap/compose.json.
+- First setup uses the base directory, no active-setup pointer required. Saved
+  reference_poc_ready, all preparation/bootstrap/published checks and automatic_startup
+  verified. Docker/containerd enabled. These flags do not prove actual reboot behavior.
+- Actual mounts .103:/share/MD0_DATA/Public at/media/Media and .102 Public at
+  /media/Media-2, both NFS, matched exact operator selections. CURRENT_SETUP.md maps
+  roles and paths. App DBs local, service identity media2000:2000, Plex binds read-only.
+- Old /home/htpc, HomeNet-Test2, setup-c2c7141a879e/family-9ad2bb7ce113 and other
+  fixtures belonged to the erased OS. Do not restore or start those resources.
 
-## Published savepoint
+## New approved media-permission policy
 
-Implementation commit e1fed73169336eb335475ae2af3937e99495d3ef is on public main.
-The GitHub-uploaded tree exactly matched the reviewed staged tree. Fresh public
-clone launcher/help/nonterminal safe exit and244tests passed; evidence:
-/var/tmp/installarr-publication-clone-p_uxbhl4/result.json. This checkpoint follow-up
-records that completed verification; no implementation changed after those tests.
-Local checkout and public main are synchronized. Credentials, reference Compose
-and Codex backups are excluded. Clone public main after reinstall.
+Operator copied test movies through the NAS GUI; nested directories were root:root
+750, inaccessible as2000:2000 despite accessible library roots. This explained empty
+Movies while directly placed TV and permissive Sports content appeared. Root-shell
+listings did not prove service-account access. Operator explicitly approved a new
+opt-in recurring host-supervisor repair policy, superseding preservation ONLY
+within configured Plex library roots. No NAS API/ACL dependency or new backend.
 
-## Last observed machine, before reinstall
+Implemented installarr/media_permissions.py, existing-supervisor integration, new
+media-permissions enable/disable/status CLI, and guided explicit opt-in (default no,
+nonsecret media_permission_repair boolean). Existing deployment opt-in is a private
+sidecar, preserving immutable config/Compose fingerprints. File-owner UIDs and
+content/mtime are preserved; inaccessible objects may get shared-group ownership
+and group read/search or owner read/search. Existing write bits not widened.
+Skip symlinks, hardlinks, nested mounts, special files, NAS metadata and explicitly
+read-only secondary sources. Exact source/marker/held-mount checks precede repair;
+server denials/skips/errors visible. MEDIA_PERMISSIONS.md gives the complete policy.
 
-Read-only inspection on2026-10-30 found a NEW successful operator-run installation:
+Schedule: first pass after healthy storage/running containers; next full pass60s
+AFTER completion. Existing supervisor polls roughly2s plus health-check time.
+1000entry/5s active batches,30s worker deadline, no overlapping repair walks and
+persistent unreaped-worker refusal. Large trees continue in following supervisor
+iterations. Repair does not set Plex scan preferences or automatically force scans.
 
-- Plex name **HomeNet-Test2**; seven selected apps Plex, Radarr, Sonarr, SABnzbd,
-  Bazarr, Ombi and Tautulli. Jackett/netboot.xyz were declined; still optional.
-- Active setup pointer: /var/lib/installarr-setup/active-setup.json.
-- Selected directory: /var/lib/installarr-setup/installations/setup-c2c7141a879e.
-- Settings: settings.json; apply state: state/state.json; app databases: apps/;
-  live Compose: project/compose.json; bootstrap Compose: state/bootstrap/compose.json.
-- Owned live unit installarr-family-c2c7141a879e.service active/enabled, seven
-  running containers, Plex healthy. Bootstrap unit inactive/disabled.
-- Apply phase reference_poc_ready; bootstrap_auth_and_paths, published_gui and
-  all preparation steps verified; automatic_startup verified. This is saved
-  installer evidence plus current inventory, not a new independent API audit.
-- Both earlier family-9ad2bb7ce113 and original family-media units are inactive/
-  disabled. Never start obsolete units alongside the selected installation.
-- Exact mount identity observed:192.168.1.103:/share/MD0_DATA/Public at/media/Media;
-  192.168.1.102:/share/MD0_DATA/Public at/media/Media-2; both NFS.
-- Nonsecret configuration map: CURRENT_SETUP.md. Private GUI/provider/family/claim
-  inputs remain under the selected private setup; no values are published.
+Physical evidence:
+- Direct NAS repair/read/rerun: /var/tmp/installarr-media-repair-hnhflpd9/result.json.
+- Actual asynchronous tracked worker: /var/tmp/installarr-media-worker-rjk1uw6z/result.json.
+- First actual live pass checked22, changed7, denied0, skipped14. Actual3movie
+  reads succeeded as2000:2000. Late restricted fixture repaired on next pass,
+ 62.41s between completions: /var/tmp/installarr-media-repeat-lidace8y/result.json.
+  Disposable fixtures removed exactly; later pass changed0.
+- Operator then confirmed CODA, Astro Boy and6Underground appeared in Plex WITHOUT
+  any additional container restart. No repeated request/playback task is needed.
 
-AFTER THE WIPE these paths, units, accounts, Docker state and claim are historical.
-Do not recover app databases or old installer state into the clean acceptance test.
-Restore only Codex conversation/config if desired, and clone the published source.
-Fresh setup must collect required credentials/Discord IDs locally and obtain a
-fresh Plex claim. Keep the separate family passwords out of the workflow.
+Current policy ENABLED at /var/lib/installarr-services/family-media/media-permissions.json.
+Explicit stopped runtime refresh preserved original bytes in
+/var/lib/installarr-setup/state/runtime-backup-e2f0f365d78e27ff.json, then restarted
+only this owned live stack; bootstrap remains off and automatic startup unchanged.
+Activated snapshot6e089fbf65ed0b2f5ca3b1ea02ea4b7a9c0c28472b6fdc6e3afed87560c06f20
+has verified integrity and works on current24.04. No further container restart
+was made after the operator observed movie discovery. Checkout subsequently fixes
+older-libc effective-ID access emulation using a short-lived real-UID verifier;
+that portability correction ships in fresh clones. Loading later source into an
+already-installed supervisor still requires the explicit stopped-refresh workflow.
 
-## Current implementation being published
+## Validation and publication
 
-- Plain ./installarr.sh guide: optional apps, local/NVMe/NAS/existing storage,
-  independent downloads, editable per-role folders, precise source/access summary.
-- Canonical media-* paths, separate secondary movie source, prepared completed
-  categories, strict per-app binds, Plex read-only media, local application DBs.
-- Eight primary folders and four new Plex libraries: Movies, TV Shows, Sports,
-  Standup; Music excluded with files preserved. No automatic media migration.
-- Full pinned TRaSH profiles plus separate quality-size limits, readback,
-  appropriate family roots/profiles/roles and private Discord preferences.
-- NFS prerequisite/endpoint options, exact mount/source checks, protected fstab
-  backups, startup guards, ongoing ownership-scoped supervision and mount ordering.
-- Explicit fresh-install selection on a surviving host: preserve old DBs/settings,
-  reuse private inputs, retire only owned previous units/mounts after confirmation.
-- Safe Newshosting connection-limit diagnostic. Arr folder collection/registration
-  gets60s HTTP/65s outer deadline; other requests remain10s. Transport diagnostics
-  identify Sonarr/Radarr without leaking credentials, bodies or stderr. No blind
-  mutating retry; resume reads existing app state before creating anything.
+Current254-test suites pass as normal user/root, plus installed-wheel suites on
+Ubuntu20.04/Python3.8 and24.04/Python3.12 at
+/var/tmp/installarr-distribution-98jjoqcm. New tests cover actual root-owned750
+repair/UID reads, idempotence, bytes/mtime/UID preservation, wrong/missing mounts,
+symlinks/hardlinks/nested mounts, server denials, batching/cursor escape, scheduling,
+no-overlap, disable/cancellation and unhealthy-storage cancellation. Existing tests
+cover durable worker timeouts/unreaped groups and supervisor crash fallback.
+Python3.8 grammar174files, shell syntax and whitespace checks pass. Real all-nine
+PTY save-only guide includes explicit repair opt-in without host provisioning.
 
-All nine adapters and511optional render subsets were previously tested. Current244-test installed wheels pass Ubuntu20.04/Python3.8 and24.04/Python3.12
-userspaces (/var/tmp/installarr-distribution-pr9mfxnw).
-Latest244-test host suites pass (htpc238/6skips, root242/2skips). These are not a
-claim of full clean-OS/systemd/reboot acceptance. See TEST_RESULTS.md for exact
-physical provider/import/library evidence, pins and publication verification.
+Initial Focal wheel exposed libc/Python effective-ID permission-check differences;
+fixed with permanently dropped real IDs in a short-lived verifier. Final wheels
+pass; the first failure and initially absent Ubuntu test image are recorded in
+TEST_RESULTS.md, not hidden or counted as successful acceptance.
 
-## Two recent failures and their interpretation
+Operator now explicitly requests publishing this feature and remaining-work outline.
+Public main before this change:4694b0d856d99bf123a9f7259691de380ff52886. No private
+policy, credentials, reference Compose, file contents or Codex history go into Git.
+Fresh clones must answer YES to the new permission-repair question to enable it.
 
-1. AppArmor: boot initialized normally and loaded docker-default. Operator ran
-   sudo umount -a, unmounting multiple system filesystems before setup. Missing
-   securityfs then blocked Docker startup. Operator confirmed the command and
-   rebooted; subsequent containers started. Never use blanket umount -a for NAS
-   cleanup. Installer runtime prerequisite/error-reporting improvements remain
-   useful, but no security bypass or AppArmor disabling was added.
-2. Sonarr: initial TV-root request had no response before the ordinary10s limit;
-   cleanup stopped owned apps. Original curl status/stderr were not retained;
-   low-level cause unproven. Bounded standalone registration later took0.518s,
-   root ID1/readback passed. Same saved seven-app apply then completed in104.44s,
-   with actual published auth/integrations. No slow-NAS reproduction was claimed.
-   The operator subsequently completed the newer HomeNet-Test2 guide recorded above.
+## Remaining work and completion estimate
 
-## Next full test
+About90% complete for the agreed fresh Ubuntu reference installer, an engineering
+estimate, not measured test coverage or a release-ready claim. The core installer
+and this selected clean seven-app run work. Every app remains optional; earlier
+all-nine fixture tests remain scoped evidence and do not force selecting nine now.
 
-1. DONE: publish implementation and verify a fresh public clone before erasing this checkout.
-2. Operator exits Codex, backs up its full ~/.codex while stopped to another
-   machine/drive, then performs the Ubuntu24.04.5 reinstall with OpenSSH.
-3. Reinstall the standalone Codex CLI using the official curl installer; restore
-   its private state if preserving this conversation. See FRESH_HOST_CODEX_HANDOFF.md.
-4. Clone the published Installarr repo to /home/htpc/Installarr. Resume conversation
-   01a1897b-0699-7b80-ae24-7badc34e2117 and explicitly report the host was wiped.
-5. Run ./installarr.sh with no flags in a separate SSH terminal for hidden prompts.
-   Do not manually preinstall Docker/NFS or restore /var/lib/installarr* databases.
-   Let the launcher and guide perform dependency/storage/account/app preparation.
-6. Confirm storage sources/access in the guide. CURRENT_SETUP.md records the last
-   approved real layout; FRESH_HOST_CODEX_HANDOFF.md also offers an isolated export
-   recipe. Do not silently substitute exports or broaden NAS access. Preserve
-   existing media; never recursively chown libraries or delete prior media folders.
-7. Verify actual shared GUI authentication, app API links, roots/categories,
-   pinned profiles/sizes, native family preferences, four Plex libraries and local
-   databases; record exact selected apps/version/result. Avoid repeated ordinary
-   requests/playback as release gates. All nine apps remain optional.
-8. Offer automatic startup only after successful setup. Coordinate reboot/reconnect
-   and absent-storage boot acceptance with the operator separately. Do not run a
-   reboot, shut down NAS or change SSH/IP/DNS/VLAN/disks/unrelated firewall rules.
+1. Publish/verify fresh clone of this feature and refreshed documentation.
+2. Coordinate actual reboot/reconnect to verify enabled units, NFS ordering,
+   guarded startup and real app availability on the new address. No reboot approved.
+3. Coordinate controlled missing/unresponsive storage acceptance including startup
+   refusal, no local fallback writes, bounded workers, repair cancellation and safe
+   recovery. Do not shut down shared NAS, disrupt production or run umount -a.
+4. Finish new-policy large/changing-tree, interrupted-worker and denied-server
+   hardening and final failure-diagnostic/documentation/release audit; fix findings.
 
-A normal reboot preserves Codex history; a wipe requires an off-machine backup to
-resume the same conversation. Signing in alone does not restore an erased chat.
-The normal installer needs no Codex, saved credential transfer, tmux, reference
-Compose file, disaster recovery tooling or new auxiliary backend.
+No new OS reinstall, ordinary media-request/playback tests, other people's
+credentials, new backends, SMB server, PXE clients or migration/disaster recovery
+are required gates. See IMPLEMENTATION_CHECKLIST.md and INTERACTIVE_TEST_QUEUE.md.

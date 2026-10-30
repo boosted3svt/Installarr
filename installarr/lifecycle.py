@@ -333,8 +333,9 @@ class Controller:
 
 
 class Supervisor:
-    def __init__(self, controller, probe, report, access=None):
+    def __init__(self, controller, probe, report, access=None, media_permissions=None):
         self.access = access
+        self.media_permissions = media_permissions
         self.controller, self.probe, self.report = controller, probe, report
         self.stopped = threading.Event()
         self.retry_after = 0
@@ -342,6 +343,8 @@ class Supervisor:
     def step(self):
         health = self.probe.check(self.stopped)
         if not health["healthy"] or self.stopped.is_set():
+            if self.media_permissions:
+                self.media_permissions.cancel()
             if self.access:
                 self.access.close()
             self.controller.stop()
@@ -357,6 +360,8 @@ class Supervisor:
             if self.access:
                 self.access.reconcile()
         except (LifecycleError, OSError, ValueError):
+            if self.media_permissions:
+                self.media_permissions.cancel()
             if self.access:
                 self.access.close()
             self.controller.stop()
@@ -365,6 +370,8 @@ class Supervisor:
             return
         if self.access:
             health = dict(health, gui=self.access.status())
+        if self.media_permissions:
+            health = dict(health, media_permissions=self.media_permissions.tick())
         self.report("containers_running", health)
 
     def run(self):
@@ -376,6 +383,8 @@ class Supervisor:
                     self.report("control_unavailable_stop_unconfirmed", {"healthy": False})
                 self.stopped.wait(2)
         finally:
+            if self.media_permissions:
+                self.media_permissions.cancel()
             if self.access:
                 self.access.close()
             self.probe.close()
@@ -449,6 +458,9 @@ WantedBy=multi-user.target
         ensure_file(Path("/etc/systemd/system") / (project + ".service"), unit.encode())
         command(["systemctl", "daemon-reload"])
         execution.reconcile("unit", lambda: None)
+    if reference and not bootstrap and config.get('media_permission_repair'):
+        from .media_permissions import set_policy
+        set_policy(name, True)
     return {"status": "installed", "unit": project + ".service", "boot_enabled": False,
             "note": "Start explicitly after storage preparation. Unit supervises only its matching bundle on the isolated daemon."}
 
@@ -492,7 +504,10 @@ def worker_main(argv=None):
             execution._save()
         from .access import Access
         access = None if definition.get("deployment_mode", "").startswith("reference") else Access(controller, args.definition.parent / "gui-ready.json", root_json)
-        supervisor = Supervisor(controller, BoundedProbe(definition["health"]), report, access)
+        from .media_permissions import MediaPermissions
+        repair = (MediaPermissions(config, args.definition.parent)
+                  if definition.get('deployment_mode') == 'reference' and 'plex' in config['apps'] else None)
+        supervisor = Supervisor(controller, BoundedProbe(definition["health"]), report, access, repair)
         signal.signal(signal.SIGTERM, lambda *unused: supervisor.stopped.set())
         signal.signal(signal.SIGINT, lambda *unused: supervisor.stopped.set())
         report("starting", {"healthy": False})

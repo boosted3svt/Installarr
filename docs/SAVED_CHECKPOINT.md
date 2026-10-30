@@ -1,42 +1,38 @@
-# Saved checkpoint — fresh Ubuntu test preparation, 2026-10-30
+# Saved checkpoint — fresh install and media repair, 2026-10-30
 
-Authoritative current context: [CURRENT_PROGRESS.md](CURRENT_PROGRESS.md).
-Nonsecret last selected settings: [CURRENT_SETUP.md](CURRENT_SETUP.md).
-Reinstall/Codex/restore commands: [FRESH_HOST_CODEX_HANDOFF.md](FRESH_HOST_CODEX_HANDOFF.md).
-Chronological validation/failure evidence: [TEST_RESULTS.md](TEST_RESULTS.md).
+Read CURRENT_PROGRESS.md, CURRENT_SETUP.md, MEDIA_PERMISSIONS.md and
+IMPLEMENTATION_CHECKLIST.md. Chronological evidence/failures: TEST_RESULTS.md.
 
-Operator authorized publishing all current source/tests/docs to boosted3svt/Installarr
-before an operator-led Ubuntu24.04.5 wipe/reinstall and a full fresh installer test.
-Publication completed: implementation e1fed73169336eb335475ae2af3937e99495d3ef
-on public main; fresh public clone launcher and244tests passed. This docs-only
-follow-up records the verified savepoint. Checkout/main synchronized; clone main
-after reinstall. No private files or reference Compose published.
-They will privately back up ~/.codex off-machine, restore it while Codex is stopped,
-and resume conversation01a1897b-0699-7b80-ae24-7badc34e2117. If no history backup
-survives, a new chat can read the published checkpoints. No Codex-controlled wipe,
-reboot, service teardown, NAS cleanup or production media migration is requested.
+OS reinstall and seven-app fresh guide COMPLETE on Ubuntu24.04.5, user plex,
+checkout /home/plex/Installarr, intentionally changed address192.168.1.51/23,
+Plex HTPC-210. Current family-media live unit active/enabled; bootstrap inactive/
+disabled; new settings/apps/state at /var/lib/installarr-setup. No old app DBs were
+restored. Old /home/htpc fixtures/paths/units are history, never restart them.
 
-Last observed current installation is HomeNet-Test2, seven apps under
-/var/lib/installarr-setup/installations/setup-c2c7141a879e; unit
-installarr-family-c2c7141a879e.service active/enabled, bootstrap inactive/disabled.
-Saved apply reference_poc_ready and automatic_startup verified; seven containers
-running, Plex healthy. Earlier family-9ad2bb7ce113 and family-media stopped/disabled.
-Current sources .103 Public→/media/Media and .102 Public→/media/Media-2 match the
-approved map. Do not start older units. After wiping, ALL this host state is history.
+Operator-approved opt-in permission repair is ACTIVE in the existing host supervisor.
+First live pass repaired7entries; actual three-movie UID2000reads and a late-arriving
+restricted fixture passed. Next pass completed62.41s later; following pass changed0.
+Operator confirms CODA/Astro Boy/6Underground now visible in Plex without further
+container restart. File-owner UIDs/content preserved; shared GID/read/search may
+change only in selected media roots. Plex remains non-root/read-only. Skip unsafe/
+shared-link/nested-mount/read-only objects, report denials; do not apply777/share-wide
+chown or add NAS-specific backends. First pass after healthy startup, repeats60s
+AFTER completion with bounded batches. MEDIA_PERMISSIONS.md has controls and limits.
 
-Publication includes standardized scoped folders/local-NVMe/NFS wizard, fresh-setup
-selection and owned mount switching, prepared categories, full pinned profiles and
-quality sizes, provider diagnostics,60s Arr root deadline and safe transport errors.
-Latest244host tests pass as htpc/root; earlier242test wheels passed supported
-Ubuntu userspaces. Successful seven-app recovery and newer operator-run ready state
-are distinct from upcoming complete clean-host/boot acceptance. Low-level cause
-of original10s Sonarr root stall was not captured/reproduced.
+Private opt-in /var/lib/installarr-services/family-media/media-permissions.json.
+Runtime original-byte backup /var/lib/installarr-setup/state/runtime-backup-e2f0f365d78e27ff.json.
+Current activated24.04snapshot remains validated; later source portability correction
+for Python3.8 ships in fresh clones and needs explicit stopped-refresh on an
+existing deployment. Do not silently replace immutable supervisor snapshots.
 
-After reinstall: clone published source, restore Codex history only if desired,
-inspect actual clean host, and run ./installarr.sh without flags. Do not restore
-old app DBs/install state or manually stage Docker/NFS. Fresh credentials/private
-family Discord IDs and Plex claim are collected locally; never chat/Git. Standard
-English subtitles/OpenSubtitles.com, Newshosting100TLS and direct NZBGeek remain.
-Movies prefer1080p with separate manual2160p; TV WEB1080p. Four Plex libraries,
-Music excluded; every app optional. No auxiliary backends/tmux. Coordinate reboot
-acceptance separately. Never use umount -a for NAS cleanup.
+254tests pass as user/root and from20.04/24.04 installed wheels; initial Focal
+permission-check failure was fixed before publication. Operator explicitly requests
+publishing this feature and full remaining-work outline. Fresh guide offers an
+explicit YES opt-in; existing configs are not silently altered. No credentials,
+private policy, reference Compose or Codex backup in Git.
+
+Estimated90% complete for agreed fresh-install scope. Remaining: publish/clone
+verification, coordinated reboot/reconnect, controlled unavailable-storage/repair
+cancellation/recovery acceptance, new-policy large/concurrent-tree/interruption
+hardening and final release audit. No reboot/outage is approved; no need for
+another reinstall, repeated ordinary app-user actions or extra backends.
