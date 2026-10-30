@@ -1,5 +1,16 @@
 # Physical test results
 
+## 2026-10-30: publication completed and fresh public clone verified
+
+Published implementation e1fed73169336eb335475ae2af3937e99495d3ef to public main
+through the existing GitHub connector with a lease on prior head c1aa297.40changed
+files uploaded; resulting GitHub tree b1e95d7069637895ff2a67fd1112bbd8c721d5bd
+exactly matches reviewed local index. Local HEAD/index/worktree synchronized.
+Fresh unauthenticated clone /var/tmp/installarr-publication-clone-p_uxbhl4 verified
+exact commit, executable launcher/help, no-argument nonterminal safe exit and
+244tests (238passed/6skips). Result.json/tests.log retained there. This docs-only
+follow-up records successful verification; no application changes since tests.
+
 ## 2026-10-30: publication and operator-led clean-test preparation
 
 Operator explicitly authorized publication of all current reviewed implementation,
@@ -35,7 +46,7 @@ Python3.8grammar172files, shell syntax and git diff whitespace pass.823reviewabl
 files scanned against18actual private saved values and encoded variants: zero
 matching files. GUI/provider passwords/APIkeys, Plex tokens/claims and family IDs
 were never printed. reference_compose.yaml remains ignored/unpublished. Public
-fresh-clone verification is recorded with the publication savepoint after pushing.
+fresh-clone verification is recorded below with the publication savepoint.
 Current live deployment left unchanged. No wipe/reboot/commit to private state.
 
 ## 2026-10-29: post-reboot Sonarr folder request and seven-app recovery

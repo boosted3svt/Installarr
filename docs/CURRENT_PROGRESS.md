@@ -5,13 +5,23 @@
 The operator requested publishing ALL current implementation/tests/documentation
 before an operator-led Ubuntu24.04.5 reinstall and a full fresh-install test.
 They will back up the Codex conversation separately, then restore it after the
-reinstall. The work now is publication and preparation for that clean test;
+reinstall. Publication is complete; the work now is preparation for that clean test;
 no machine wipe, reboot, service shutdown or media cleanup is authorized for Codex.
 
 Read this file, SAVED_CHECKPOINT.md, CURRENT_SETUP.md and FRESH_HOST_CODEX_HANDOFF.md
 before acting. TEST_RESULTS.md preserves chronological evidence and failures.
 Older AGENTS.md/live-stack statements are superseded by this checkpoint. Inspect
 actual host state after reconnecting: conversation history does not restore a host.
+
+## Published savepoint
+
+Implementation commit e1fed73169336eb335475ae2af3937e99495d3ef is on public main.
+The GitHub-uploaded tree exactly matched the reviewed staged tree. Fresh public
+clone launcher/help/nonterminal safe exit and244tests passed; evidence:
+/var/tmp/installarr-publication-clone-p_uxbhl4/result.json. This checkpoint follow-up
+records that completed verification; no implementation changed after those tests.
+Local checkout and public main are synchronized. Credentials, reference Compose
+and Codex backups are excluded. Clone public main after reinstall.
 
 ## Last observed machine, before reinstall
 
@@ -83,7 +93,7 @@ physical provider/import/library evidence, pins and publication verification.
 
 ## Next full test
 
-1. Finish publication/verify a fresh public clone before erasing this checkout.
+1. DONE: publish implementation and verify a fresh public clone before erasing this checkout.
 2. Operator exits Codex, backs up its full ~/.codex while stopped to another
    machine/drive, then performs the Ubuntu24.04.5 reinstall with OpenSSH.
 3. Reinstall the standalone Codex CLI using the official curl installer; restore

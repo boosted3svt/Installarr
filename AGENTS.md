@@ -614,3 +614,8 @@ local/NVMe/NFS guide, fresh-setup switching and safe provider/Arr timeout diagno
 10s stall cause not proved; no blind mutating retry. Never umount -a for NAS cleanup.
 Next goal is full clean-OS/systemd install and coordinated boot/mount acceptance,
 not repeated ordinary user actions. Every app remains optional; no new backends.
+
+Publication complete: implementation e1fed73169336eb335475ae2af3937e99495d3ef
+on public main, exact reviewed tree verified; fresh public clone launcher and
+244tests pass. Docs-only follow-up records the completed savepoint. Clone main
+after reinstall; no private files/reference Compose or app DBs published.

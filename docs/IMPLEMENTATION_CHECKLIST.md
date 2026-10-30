@@ -7,7 +7,7 @@
 - [x] Arr root requests have bounded60s deadlines and safe diagnostics;244host tests pass.
 - [x] Current settings/host ownership and recent failure evidence recorded in
       CURRENT_SETUP.md and CURRENT_PROGRESS.md; old live-stack entries below are historical.
-- [ ] Publish current implementation and verify a fresh public clone.
+- [x] Publish current implementation and verify a fresh public clone (e1fed73;244tests).
 - [ ] Operator-led Ubuntu24.04.5 reinstall, then complete no-flag fresh installation.
 - [ ] Separately coordinated reboot/reconnect and absent-storage boot acceptance.
 

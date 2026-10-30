@@ -7,6 +7,10 @@ Chronological validation/failure evidence: [TEST_RESULTS.md](TEST_RESULTS.md).
 
 Operator authorized publishing all current source/tests/docs to boosted3svt/Installarr
 before an operator-led Ubuntu24.04.5 wipe/reinstall and a full fresh installer test.
+Publication completed: implementation e1fed73169336eb335475ae2af3937e99495d3ef
+on public main; fresh public clone launcher and244tests passed. This docs-only
+follow-up records the verified savepoint. Checkout/main synchronized; clone main
+after reinstall. No private files or reference Compose published.
 They will privately back up ~/.codex off-machine, restore it while Codex is stopped,
 and resume conversation01a1897b-0699-7b80-ae24-7badc34e2117. If no history backup
 survives, a new chat can read the published checkpoints. No Codex-controlled wipe,
