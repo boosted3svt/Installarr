@@ -1,5 +1,18 @@
 # Physical test results
 
+## 2026-10-30: media-permission feature publication verified
+
+Published f8f54cc0dad6d8786c0cd2454b9968de83f51846 to public main using the existing
+GitHub connector with an expected-head lease on4694b0d.17changed/new files, remote
+tree0030b74a59010aef52b3429bf9a827bd1b77b112 exactly matched reviewed local index.
+826reviewable files checked against10actual saved private values/encoded variants:
+zero matching files. No credentials, private policy, databases or Codex history
+published. Fresh unauthenticated clone /var/tmp/installarr-media-public-clone-fj4hjemp
+verified exact commit, executable launcher, new media-permissions help/module,
+nonterminal safe exit and254tests (245passed/9skips). Result.json/tests.log retained.
+This docs-only follow-up records completed verification; tested code unchanged.
+Current unit remains active/enabled; no additional container restart or reboot.
+
 ## 2026-10-30: fresh24.04.5 and approved supervised media repair
 
 Operator reinstalled Ubuntu24.04.5, restored Codex history and ran the published

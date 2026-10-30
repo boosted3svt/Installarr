@@ -665,3 +665,9 @@ and unavailable-storage acceptance, new-policy large/changing-tree/interruption
 hardening and final release audit. Selected clean seven-app install is COMPLETE;
 do not require another reinstall, all-nine selection or more ordinary app-user
 actions. See rewritten IMPLEMENTATION_CHECKLIST.md and INTERACTIVE_TEST_QUEUE.md.
+
+Permission feature publication COMPLETE: f8f54cc0dad6d8786c0cd2454b9968de83f51846
+on public main; exact reviewed tree verified, fresh public clone/new CLI/module
+and254tests passed. Docs-only follow-up records completed savepoint. Fresh clones
+answer YES to the new opt-in; current live policy stays active without further
+container restart. Remaining work and90% estimate in IMPLEMENTATION_CHECKLIST.md.

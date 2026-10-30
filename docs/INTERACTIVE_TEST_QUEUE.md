@@ -25,7 +25,7 @@ measured62.41s between passes including polling. See MEDIA_PERMISSIONS.md.
 
 ## Independent work
 
-Publish the feature and refreshed checkpoints; validate the fresh public clone.
+Feature/checkpoints published (f8f54cc); fresh public clone/new CLI/254tests passed.
 Finish new-policy large-tree/concurrent-copy/worker-interruption/server-refusal
 hardening and final release documentation/diagnostic audit. Do not reinterpret
 ordinary Plex requests/playback, other people's passwords, an all-nine selection,

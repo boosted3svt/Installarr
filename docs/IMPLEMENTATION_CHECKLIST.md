@@ -50,9 +50,9 @@ clients or repeated ordinary media requests/playback as mandatory remaining work
 
 ## Required completion work
 
-- [ ] Publish current permission policy and refreshed docs; verify an unauthenticated
+- [x] Publish current permission policy and refreshed docs; verify an unauthenticated
       fresh clone includes the new module, guide option and tests. See Git history
-      and CURRENT_PROGRESS.md for the resulting publication savepoint.
+      and CURRENT_PROGRESS.md for the resulting publication savepoint (f8f54cc).
 - [ ] Coordinate an actual reboot/reconnect of THIS completed installation and
       verify NFS mount ordering, enabled units, protected startup and app availability.
       No reboot has been authorized or performed by Codex for this new installation.

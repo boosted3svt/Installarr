@@ -85,8 +85,12 @@ fixed with permanently dropped real IDs in a short-lived verifier. Final wheels
 pass; the first failure and initially absent Ubuntu test image are recorded in
 TEST_RESULTS.md, not hidden or counted as successful acceptance.
 
-Operator now explicitly requests publishing this feature and remaining-work outline.
-Public main before this change:4694b0d856d99bf123a9f7259691de380ff52886. No private
+Published feature f8f54cc0dad6d8786c0cd2454b9968de83f51846 to public main with an
+expected-head lease on4694b0d. Remote tree exactly matched reviewed local index.
+Fresh unauthenticated clone /var/tmp/installarr-media-public-clone-fj4hjemp passed
+new CLI/module checks, nonterminal safe exit and254tests (245passed/9skips). This
+docs-only follow-up records completed publication; tested implementation unchanged.
+Local checkout/main synchronized. No private
 policy, credentials, reference Compose, file contents or Codex history go into Git.
 Fresh clones must answer YES to the new permission-repair question to enable it.
 
@@ -97,7 +101,7 @@ estimate, not measured test coverage or a release-ready claim. The core installe
 and this selected clean seven-app run work. Every app remains optional; earlier
 all-nine fixture tests remain scoped evidence and do not force selecting nine now.
 
-1. Publish/verify fresh clone of this feature and refreshed documentation.
+1. DONE: publish and verify fresh clone of this feature and refreshed documentation.
 2. Coordinate actual reboot/reconnect to verify enabled units, NFS ordering,
    guarded startup and real app availability on the new address. No reboot approved.
 3. Coordinate controlled missing/unresponsive storage acceptance including startup

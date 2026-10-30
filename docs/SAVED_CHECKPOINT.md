@@ -26,13 +26,13 @@ for Python3.8 ships in fresh clones and needs explicit stopped-refresh on an
 existing deployment. Do not silently replace immutable supervisor snapshots.
 
 254tests pass as user/root and from20.04/24.04 installed wheels; initial Focal
-permission-check failure was fixed before publication. Operator explicitly requests
-publishing this feature and full remaining-work outline. Fresh guide offers an
+permission-check failure was fixed before publication. Feature published as
+f8f54cc0dad6d8786c0cd2454b9968de83f51846 on main; fresh public clone passed new
+CLI/module checks and254tests. Docs-only follow-up records that verified savepoint. Fresh guide offers an
 explicit YES opt-in; existing configs are not silently altered. No credentials,
 private policy, reference Compose or Codex backup in Git.
 
-Estimated90% complete for agreed fresh-install scope. Remaining: publish/clone
-verification, coordinated reboot/reconnect, controlled unavailable-storage/repair
+Estimated90% complete for agreed fresh-install scope. Publication/clone verification complete; remaining: coordinated reboot/reconnect, controlled unavailable-storage/repair
 cancellation/recovery acceptance, new-policy large/concurrent-tree/interruption
 hardening and final release audit. No reboot/outage is approved; no need for
 another reinstall, repeated ordinary app-user actions or extra backends.
